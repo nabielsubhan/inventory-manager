@@ -9,7 +9,7 @@ Tautan untuk menuju aplikasi Inventory Manager -> [Inventory Manager](https://in
 
 ## Membuat Proyek Django Baru
 1. Membuat direktori baru dengan nama `Tugas 2`, lalu membuka *command prompt* pada direktori tersebut.
-2. Membuat virtual environment dengan menjalankan perintah `python -m venv env`.
+2. Membuat *virtual environment* dengan menjalankan perintah `python -m venv env`.
 3. Mengaktifkan *virtual environment* dengan menjalankan perintah `env\Scripts\activate.bat`.
 4. Membuat file baru dengan nama `requirements.txt` pada direktori yang sama, lalu memasukkan beberapa *dependencies* yang akan digunakan, yaitu:
 ```txt
@@ -21,15 +21,15 @@ requests
 urllib3
 ```
 5. Memasang *dependencies* tersebut dengan menjalankan perintah `pip install -r requirements.txt`.
-6. Membuat proyek *Django* baru dengan nama `inventory-manager` menggunakan perintah `django-admin startproject inventory-manager .`.
-7. Menambahkan '*' pada 'ALLOWED_HOST' pada file `settings.py` untuk mengizinkan akses ke semua host sehingga aplikasi dapat diakses secara luas.
+6. Membuat proyek Django baru dengan nama `inventory-manager` menggunakan perintah `django-admin startproject inventory-manager .`.
+7. Menambahkan `*` pada `ALLOWED_HOST` pada file `settings.py` untuk mengizinkan akses ke semua host sehingga aplikasi dapat diakses secara luas.
 ```python
 ...
 ALLOWED_HOSTS = ["*"]
 ...
 ```
-8. Menjalankan server *Django* dengan menggunakan perintah `python manage.py runserver` pada *command prompt* dan pergi ke http://localhost:8000 untuk mengecek apakah aplikasi *Django* telah berhasil dibuat yang ditandai dengan adanya animasi roket.
-9. Menonaktifkan *virtual environment* setelah aplikasi *Django* berhasil dibuat dengan menjalankan perintah `deactivate`.
+8. Menjalankan server Django dengan menggunakan perintah `python manage.py runserver` pada *command prompt* dan pergi ke http://localhost:8000 untuk mengecek apakah aplikasi Django telah berhasil dibuat yang ditandai dengan adanya animasi roket.
+9. Menonaktifkan *virtual environment* setelah aplikasi Django berhasil dibuat dengan menjalankan perintah `deactivate`.
 10. Menambahkan file `.gitignore` dan mengisinya dengan teks berikut untuk menentukan file dan direktori mana saja yang perlu diabaikan oleh Git.
 ```txt
 # Django
@@ -171,12 +171,10 @@ GitHub.sublime-settings
 .history
 ```
 
-## Membuat aplikasi dengan nama `main` pada proyek `inventory-manager`\
-1. Mengaktifkan kembali *virtual environment* dengan menjalankan perintah `env\Scripts\activate.bat`
+## Membuat aplikasi dengan nama `main` pada proyek `inventory-manager`
+1. Mengaktifkan kembali *virtual environment* dengan menjalankan perintah `env\Scripts\activate.bat`.
 2. Menjalankan perintah `python manage.py startapp main` untuk membuat aplikasi baru dengan nama `main`.
-
-## Melakukan routing pada proyek agar dapat menjalankan aplikasi `main`
-1. Mendaftarkan aplikasi `main` dengan cara pergi ke file `settings.py`, lalu menambahkan `'main'` ke dalam variabel `INSTALLED_APPS`.
+3. Mendaftarkan aplikasi `main` dengan cara pergi ke file `settings.py`, lalu menambahkan `'main'` ke dalam variabel `INSTALLED_APPS`.
 ```python
 INSTALLED_APPS = [
     ...,
@@ -201,10 +199,10 @@ class Item(models.Model):
 ```
 3. Menjalankan perintah `python manage.py makemigrations` untuk membuat file migrasi yang berisi perubahan model basis data, lalu jalankan perintah `python manage.py migrate` untuk memigrasikannya ke dalam basis data lokal. Lakukan langkah ini setiap kali ada perubahan pada model.
  
-## Membuat sebuah fungsi pada views.py untuk dikembalikan ke dalam sebuah template HTML yang menampilkan nama aplikasi, nama dan kelas
+## Membuat sebuah fungsi pada `views.py` untuk dikembalikan ke dalam sebuah template  yang menampilkan nama aplikasi, nama, dan kelas
 1. Membuat direktori baru dengan nama `templates`, lalu membuat file `main.html` di dalam direktori tersebut.
 2. Mengisi file `main.html` dengan kode berikut.
-```html
+```
 <h1>{{ appname }}</h1>
 
 <h5>Name: </h5>
@@ -212,7 +210,7 @@ class Item(models.Model):
 <h5>Class: </h5>
 <p>{{ class }}</p> <!-- Ubahlah sesuai dengan kelas kamu -->
 ```
-3. Setelah itu, membuka file `views.py` di dalam file aplikasi main, lalu menambahkan baris impor `from django.shortcuts import render` untuk mengimpor fungsi render dari modul `django.shortcuts` yang nantinya berfungsi untuk me-render file html yang sudah dibuat.
+3. Setelah itu, membuka file `views.py` di dalam file aplikasi main, lalu menambahkan baris impor `from django.shortcuts import render` untuk mengimpor fungsi render dari modul `django.shortcuts` yang nantinya berfungsi untuk me-render file HTML yang sudah dibuat.
 4. Menambahkan fungsi `show_main` di dalam file `views.py` dengan kode berikut.
 ```python
 def show_main(request):
@@ -224,7 +222,7 @@ def show_main(request):
 
     return render(request, "main.html", context)
 ```
-Nilai dari variabel yang didefinisikan pada `context` akan muncul pada file html dengan menggunakan sintaks `{{ appname }}`, `{{ name }}`, dan `{{ class }}`.
+Nilai dari variabel yang didefinisikan pada `context` akan muncul pada file HTML dengan menggunakan sintaks `{{ appname }}`, `{{ name }}`, dan `{{ class }}`.
 
 ## Mengonfigurasi *routing* URL
 1. Membuat file baru dengan nama `urls.py` di dalam direktori `main` dan mengisinya dengan kode berikut agar aplikasi `main` dapat diakses melalui peramban web.
@@ -256,12 +254,12 @@ Dengan begitu, rute URL proyek telah terhubung ke tampilan `main`.
 
 ## Melakukan *deployment* ke Adaptable terhadap aplikasi yang sudah dibuat
 1. Membuka [GitHub](https://github.com/), lalu buat repositori baru dengan nama `inventory-manager`. Mengatur visibilitas proyek sebagai "Public" dan membiarkan pengaturan lainnya sesuai *default*.
-2. Buka command prompt di direktori `Tugas 2`, lalu membuat branch utama baru dengan menjalankan perintah `git branch -M master`, lalu menghubungkannya dengan repositori yang barusan dibuat di github dengan menjalankan perintah `git remote add origin https://github.com/nabielsubhan/inventory-manager.git`.
+2. Buka command prompt di direktori `Tugas 2`, lalu membuat *branch* utama baru dengan menjalankan perintah `git branch -M master`, lalu menghubungkannya dengan repositori yang barusan dibuat di github dengan menjalankan perintah `git remote add origin https://github.com/nabielsubhan/inventory-manager.git`.
 3. Melakukan *push* ke repositori GitHub dengan menjalankan perintah `git add .`, lalu `git commit -m "Proyek Inventory Manager Tugas 2 PBP"`, dan `git push -u origin master`.
 4. Setelah itu, *login* ke [Adaptable.io](https://adaptable.io/).
 5. Tekan tombol `New App`, lalu pilih `Connect an Existing Repository`.
 6. Hubungkan [Adaptable.io](https://adaptable.io/) dengan GitHub dan pilih `All Repositories` pada proses instalasi.
-7. Pilih repositori `inventory-manager` sebagai basis aplikasi yang akan di-*deploy* dan branch yang akan digunakan.
+7. Pilih repositori `inventory-manager` sebagai basis aplikasi yang akan di-*deploy* dan *branch* yang akan digunakan.
 8. Pilih `Python App Template` sebagai template *deployment*.
 9. Pilih `PostgreSQL` sebagai tipe basis data yang akan digunakan.
 10. Mengganti versi python menjadi `3.11`.
@@ -269,10 +267,80 @@ Dengan begitu, rute URL proyek telah terhubung ke tampilan `main`.
 12. Masukkan `inventory-manager` sebagai nama aplikasi.
 13. Centang bagian `HTTP Listener on PORT` dan klik `Deploy App` untuk memulai proses *deployment*.
 
+## **BONUS: Membuat unit test**
+Saya menambahkan tes untuk mengecek apakah model berhasil dibuat dan apakah data yang dibuat telah sesuai dengan menambahkan kode berikut ke file `tests.py`.
+```python
+from django.test import TestCase, Client
+from main.models import Item
+
+# Create your tests here.
+class mainTest(TestCase):
+    def test_main_url_is_exist(self):
+        response = Client().get('/main/')
+        self.assertEqual(response.status_code, 200)
+
+    def test_main_using_main_template(self):
+        response = Client().get('/main/')
+        self.assertTemplateUsed(response, 'main.')
+
+    def test_create_template(self):
+        item = Item.objects.create(
+            name="an item",
+            amount="10",
+            description="the total of this item is 10"
+        )
+
+        self.assertEqual(item.name, "an item")
+        self.assertEqual(item.amount, "10")
+        self.assertEqual(item.description, "the total of this item is 10")
+```
+Setelah menjalankan perintah `python manage.py test` pada *command prompt*, inilah hasil tes yang keluar.
+```txt
+Found 3 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.012s
+
+OK
+Destroying test database for alias 'default'...
+```
+
+## Bagan *Request Client* pada Web Aplikasi Berbasis Django
+![Bagan *Request Client*](image/bagan.png)<br>
+Alur cara kerja Django dalam menerima *request* dari *client* adalah sebagai berikut:
+1. **Permintaan dari *client***, biasanya melalui peramban web.
+2. **Web Server**, permintaan *client* diterima oleh web server (Nginx atau Apache).
+3. **WSGI (Web Server Gateway Interface)**, web server meneruskan *request* ke WSGI server yang bertindak sebagai perantara antara web server dengan aplikasi Django.
+4. **Request**, *request client* dikirimkan ke aplikasi Django sebagai permintaan HTTP.
+5. **URL Router**, mengarahkan *request* ke View yang sesuai dengan URL yang diterima.
+6. **Views**, setelah menerima URL, Django memanggil fungsi pada `views.py` yang sesuai dengan permintaan.
+7. **ORM (Object-Relational Mapping) dan Database**, View mengakses dan mengolah data dalam *database* sesuai dengan permintaan melalui ORM.
+8. **Template Tags**, setelah selesai memproses data, View mengisi template dengan data yang akan ditampilkan (*template tags*).
+9. **Context Processors**, *Context Processors* dapat digunakan untuk memberikan data tambahan yang akan ditampilkan.
+10. **Template (HTML)**, setelah Template selesai diisi dengan data yang ingin ditampilkan, tampilan HTML akan siap ditampilkan ke pengguna.
+11. **Response**, Django menghasilkan konten HTML dan informasi lain sebagai bentuk respons HTTP.
+12. **WSGI**, respons HTTP dikirimkan kembali ke WSGI server.
+13. **Web Server**, web server menerima respons HTTP dari WSGI server.
+14. **Client**, *client* menerima respons dan halaman web yang sesuai dengan permintaan awal akan ditampilkan.
+
+Hubungan antara `urls.py`, `views.py`, `models.py`, dan `html` adalah `urls.py` akan mengarahkan *request* yang diterima ke `View`, lalu `views.py` akan memanggil *function* yang sesuai dengan *request* tersebut. Nantinya `views.py` akan berinteraksi dengan `models.py` untuk memproses, mengubah, atau mengolah data di *database*. Setelah data diproses, file `html` akan diisi dengan template yang menggunakan sintaks dari Django yang memungkinkan untuk memasukkan data yang telah diperoleh dari View ke tampilan pengguna nantinya.
+
 ## Mengapa kita menggunakan *Virtual Environment*
-Penggunaan *virtual environment* memberikan berbagai manfaat penting, diantaranya adalah terciptanya *environment* yang terpisah untuk setiap proyek yang kita miliki sehingga memungkinkan kita untuk menggunakan versi python, Django, maupun dependensi-dependensi yang berbeda untuk proyek yang berbeda tanpa perlu khawatir akan terjadi konflik. Selain itu, dengan menggunakan *virtual environment* akan membuat lingkungan kerja proyek menajdi lebih bersih dan terorganisir sehingga memudahkan kita untuk mengelola proyek-proyek yang berbeda. *Virtual environment* juga dapat memudahkan ketika melakukan pengerjaan suatu proyek dengan sebuah tim karena setiap anggota dapat memiliki lingkungan virtual masing-masing dengan dependensi yang mereka butuhkan.
+Penggunaan *virtual environment* memberikan berbagai manfaat penting, diantaranya adalah terciptanya *environment* yang terpisah untuk setiap proyek yang kita miliki sehingga memungkinkan kita untuk menggunakan versi python, Django, maupun dependensi-dependensi yang berbeda untuk proyek yang berbeda tanpa perlu khawatir akan terjadi konflik. Selain itu, dengan menggunakan *virtual environment* akan membuat lingkungan kerja proyek menjadi lebih bersih dan terorganisir sehingga memudahkan kita untuk mengelola proyek-proyek yang berbeda. *Virtual environment* juga dapat memudahkan ketika melakukan pengerjaan suatu proyek dengan sebuah tim karena setiap anggota dapat memiliki lingkungan virtual masing-masing dengan dependensi yang mereka butuhkan.
 
 ## Apakah kita tetap dapat membuat aplikasi web berbasis Django tanpa menggunakan *virtual environment*?
+Kita tetap dapat membuat aplikasi web berbasis Django tanpa menggunakan *virtual environment*, tetapi akan terdapat beberapa masalah yang akan timbul, seperti konflik antara *dependencies* dan sulitnya mengelola versi python yang digunakan pada proyek berbeda. Bahkan, ketika kita mencoba untuk menghapus suatu *package* pada proyek tertentu, hal tersebut dapat berpotensi untuk merusak proyek-proyek lain yang menggunakan *package* tersebut. Oleh karena itu, penggunaan *virtual environment* sangat dianjurkan ketika membuat proyek aplikasi web berbasis Django.
 
+## Apa itu MVC, MVT, dan MVVM
+MVC (Model-View-Controller), MVT (Model-View-Template), dan MVVM (Model-View-ViewModel) adalah suatu pola arsitektur perangkat lunak yang digunakan untuk merancang struktur dan organisasi umum suatu perangkat lunak. Pola arsitektur tersebut membagi perangkat lunak menjadi beberapa bagian sehingga pengembangan aplikasi dapat lebih terstruktur dan mudah untuk dikelola. Ketiga pola arsitektur tersebut mempunyai keunikan tersendiri dalam mengelola suatu proyek aplikasi.
 
-   
+* **MVC (Model-View-Controller)**
+MVC membagi aplikasi menjadi 3 komponen, yaitu Model, View, dan Controller. Model berfungsi untuk memproses, menyimpan, dan mengelola data serta mengatur aturan bisnis aplikasi, View berfungsi untuk menampilkan data dari Model kepada pengguna, dan Controller berfungsi untuk mengelola aliran aplikasi dan menjaga ke-sinkronan antara Model dan View.
+* **MVT (Model-View-Template)**
+MVT memisahkan komponen-komponen pada aplikasi menjadi 3 bagian juga, yaitu Model, View, dan Template. Tugas Model pada MVT kurang lebih sama dengan Model pada MVC, yaitu untuk mengatur dan mengelola data aplikasi, View pada MVT berfungsi untuk mengelola logika presentasi data aplikasi kepada pengguna, sedangkan Template adalah komponen yang berfungsi untuk mengatur antarmuka yang akan ditampilkan kepada pengguna.
+* **MVVM (Model-View-ViewModel)**
+MVVM membagi aplikasi menjadi 3 komponen juga, yaitu Model, View, dan ViewModel. Model berfungsi untuk mengatur data dan logika bisnis aplikasi, View mengelola antarmuka untuk menampilkan data pada pengguna, sedangkan ViewModel berfungsi untuk Menghubungkan Model dan View serta menjalankan operasi untuk mengubah data pada Model yang nantinya akan ditampilkan oleh View.
+
+MVC dan MVT biasanya digunakan untuk melakukan pengembangan web, sedangkan MVVM lebih umum digunakan untuk mengembangkan aplikasi yang berfokus pada tampilan antarmuka pengguna. Bahasa pemrograman yang biasa digunakan pada MVC adalah Ruby atau Python, pada MVT bahasa yang digunakan adalah Python, sedangkan untuk MVVM bahasa yang sering digunakan adalah C# atau Javascript. Meskipun begitu, bahasa yang digunakan ketika akan mengembangkan suatu aplikasi bergantung pada preferensi pengembang serta ekosistem yang akan digunakan.
