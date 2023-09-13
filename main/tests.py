@@ -21,3 +21,4 @@ class mainTest(TestCase):
         self.assertEqual(item.name, "an item")
         self.assertEqual(item.amount, "10")
         self.assertEqual(item.description, "the total of this item is 10")
+        
