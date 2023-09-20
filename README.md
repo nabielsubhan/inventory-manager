@@ -568,4 +568,11 @@ JSON memiliki banyak keunggulan, seperti menggunakan syntax yang mudah dimengert
 * JSON by ID (http://localhost:8000/json/2)
  ![alt-text](image/postman_json_by_id.png)
 
+## Bonus
+Menambahkan fitur untuk memberikan pesan banyaknya item yang sudah disimpan pada plikasi dengan menambahkan kode berikut.
+```html
+<div>
+    <p>Kamu menyimpan {{ items|length }} item pada aplikasi ini</p>
+</div>
+```
    
