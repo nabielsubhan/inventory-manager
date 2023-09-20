@@ -7,6 +7,7 @@
 
 Tautan untuk menuju aplikasi Inventory Manager -> [Inventory Manager](https://inventory-manager.adaptable.app/main/)
 
+# Tugas 2: Implementasi Model-View-Template (MVT) pada Django
 ## Membuat Proyek Django Baru
 1. Membuat direktori baru dengan nama `Tugas 2`, lalu membuka *command prompt* pada direktori tersebut.
 2. Membuat *virtual environment* dengan menjalankan perintah `python -m venv env`.
@@ -344,3 +345,227 @@ MVT memisahkan komponen-komponen pada aplikasi menjadi 3 bagian juga, yaitu Mode
 MVVM membagi aplikasi menjadi 3 komponen juga, yaitu Model, View, dan ViewModel. Model berfungsi untuk mengatur data dan logika bisnis aplikasi, View mengelola antarmuka untuk menampilkan data pada pengguna, sedangkan ViewModel berfungsi untuk Menghubungkan Model dan View serta menjalankan operasi untuk mengubah data pada Model yang nantinya akan ditampilkan oleh View.
 
 MVC dan MVT biasanya digunakan untuk melakukan pengembangan web, sedangkan MVVM lebih umum digunakan untuk mengembangkan aplikasi yang berfokus pada tampilan antarmuka pengguna. Bahasa pemrograman yang biasa digunakan pada MVC adalah Ruby atau Python, pada MVT bahasa yang digunakan adalah Python, sedangkan untuk MVVM bahasa yang sering digunakan adalah C# atau Javascript. Meskipun begitu, bahasa yang digunakan ketika akan mengembangkan suatu aplikasi bergantung pada preferensi pengembang serta ekosistem yang akan digunakan.
+
+# Tugas 3: Implementasi Form dan Data Delivery pada Django
+##  Membuat input form untuk menambahkan objek model
+1. Mengubah routing main/ menjadi / agar lebih sesuai dengan konvensi pada `urls.py` di folder `inventory_manager`.
+```python
+urlpatterns = [
+    path('', include('main.urls')),
+    path('admin/', admin.site.urls),
+]
+```
+2. Membuat kerangka dasar untuk halaman web lainnya dengan membuat folder `templates` pada *root folder* dan membuat file dengan nama `base.html`. Setelah itu, isi file tersebut dengan kode berikut.
+```html
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+        />
+        {% block meta %}
+        {% endblock meta %}
+    </head>
+
+    <body>
+        {% block content %}
+        {% endblock content %}
+    </body>
+</html>
+```
+3. Modifikasi file `settings.py` yang ada pada direktori `inventory_manager` dengan menambahkan kode berikut pada bagian `TEMPLATES`.
+```python
+'DIRS': [BASE_DIR / 'templates'],
+```
+4. Ubah file `main.html` pada subdirektori `templates` yang ada pada direktori `main` dengan menambahkan baris kode berikut di awal.
+```html
+{% extends 'base.html' %}
+```
+5. Membuat file baru dengan nama `forms.py` untuk membuat form yang dapat menerima data produk baru. Tambahkan kode berikut ke dalam file tersebut.
+```python
+from django.forms import ModelForm
+from main.models import Item
+
+class ItemForm(ModelForm):
+    class Meta:
+        model = Item
+        fields = ["name", "amount", "description"]
+```
+6. Buka `views.py`, lalu tambahkan *import* berikut.
+```python
+from django.http import HttpResponseRedirect
+from main.forms import ProductForm
+from django.urls import reverse
+```
+7. Buat fungsi `create_item` pada file `views.py` untuk membuat formulir yang dapat menambahkan data item baru ketika form di-*submit*.
+```python
+def create_item(request):
+    form = ItemForm(request.POST or None)
+
+    if form.is_valid() and request.method == "POST":
+        form.save()
+        return HttpResponseRedirect(reverse('main:show_main'))
+
+    context = {'form': form}
+    return render(request, "create_item.html", context)
+```
+8. Ubah fungsi `show_main` pada file `views.py` menjadi seperti berikut.
+```python
+def show_main(request):
+    items = Item.objects.all()
+
+    context = {
+        'appname': 'Inventory Manager',
+        'name': 'Muhammad Nabiel Subhan',
+        'class': 'PBP A',
+        'items': items
+    }
+
+    return render(request, "main.html", context)
+```
+9. *Import* fungsi `create_item` yang sudah dibuat sebelumnya ke file `urls.py` pada direktori `main` dengan menambahkan kode `from main.views import show_main, create_item`, lalu tambahkan *url path*-nya ke `urlpatterns` dengan menambahkan kode `path('create-item', create_item, name='create_item'),`.
+10. Buat file dengan nama `create_item.html` pada direktori `main/templates` dan isi file tersebut dengan kode berikut.
+```html
+{% extends 'base.html' %} 
+
+{% block content %}
+<h1>Add New Product</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    <table>
+        {{ form.as_table }}
+        <tr>
+            <td></td>
+            <td>
+                <input type="submit" value="Add Item"/>
+            </td>
+        </tr>
+    </table>
+</form>
+
+{% endblock %}
+```
+11. Tambahkan kode berikut pada file `main.html` di dalam `{% block content %}` untuk menampilkan data item dalam bentuk tabel dan menambahkan tombol `Add New Item` yang akan me-*redirect* ke file `create_item.html`.
+```html
+<table>
+        <tr>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>Description</th>
+            <th>Date Added</th>
+        </tr>
+
+        {% comment %} Berikut cara memperlihatkan data item di bawah baris ini {% endcomment %}
+
+        {% for item in items %}
+            <tr>
+                <td>{{item.name}}</td>
+                <td>{{item.amount}}</td>
+                <td>{{item.description}}</td>
+                <td>{{item.date_added}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <br />
+
+    <a href="{% url 'main:create_item' %}">
+        <button>
+            Add New Item
+        </button>
+    </a>
+```
+
+## Menambahkan 5 fungsi baru pada `views.py` untuk menampilkan objek yang ditambahkan dalam bentuk HTML, XML, JSON, XML by ID, dan JSON by ID
+1. Fungsi untuk menampilkan objek dalam bentuk HTML
+* Fungsi `show_main` yang sudah pernah dibuat sebelumnya akan me-*render* file `main.html` yang berisi data item-item yang telah dimasukkan.
+```python
+def show_main(request):
+    items = Item.objects.all()
+
+    context = {
+        'appname': 'Inventory Manager',
+        'name': 'Muhammad Nabiel Subhan',
+        'class': 'PBP A',
+        'items': items
+    }
+
+    return render(request, "main.html", context)
+```
+2. Fungsi untuk menampilkan objek yang ditambahkan dalam bentuk XML
+* Tambahkan kode *import* berikut pada file `views.py` yang ada pada direktori `main`.
+```python
+from django.http import HttpResponse
+from django.core import serializers
+```
+* Buat fungsi `show_xml` yang menerima parameter berupa `request` dan memiliki *return statement* yang akan mengembalikan `HttpResponse` yang berisi data *query* yang sudah diserialisasi menjadi XML.
+```python
+def show_xml(request):
+    data = Item.objects.all()
+    return HttpResponse(serializers.serialize("xml", data), content_type="application/xml")
+```
+3. Fungsi untuk menampilkan objek yang ditambahkan dalam bentuk JSON
+* Buat fungsi `show_json` yang menerima parameter berupa `request` dan memiliki *return statement* yang akan mengembalikan `HttpResponse` yang berisi data *query* yang sudah diserialisasi menjadi JSON.
+```python
+def show_json(request):
+    data = Item.objects.all()
+    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
+```
+4. Fungsi untuk mengembalikan data berdasarkan ID dalam bentuk XML
+* Buat fungsi `show_xml_by_id` yang menerima parameter berupa `request` dan ID yang memiliki *return statement* yang akan mengembalikan `HttpResponse` yang berisi data *query* yang sudah diserialisasi menjadi XML.
+```python
+def show_xml_by_id(request, id):
+    data = Item.objects.filter(pk=id)
+    return HttpResponse(serializers.serialize("xml", data), content_type="application/xml")
+```
+5. Fungsi untuk mengembalikan data berdasarkan ID dalam bentuk JSON
+* Buat fungsi `show_json_by_id` yang menerima parameter berupa `request` dan ID yang memiliki *return statement* yang akan mengembalikan `HttpResponse` yang berisi data *query* yang sudah diserialisasi menjadi JSON.
+```python
+def show_json_by_id(request, id):
+    data = Item.objects.filter(pk=id)
+    return HttpResponse(serializers.serialize("json", data), content_type="application/json")
+```
+6. Setelah itu, *import* semua fungsi yang sudah dibuat di atas ke dalam file `urls.py` yang ada pada direktori `main`.
+```python
+from main.views import show_main, create_item, show_xml, show_json, show_xml_by_id, show_json_by_id
+```
+7. Tambahkan *path url* ke dalam `urlpatters` agar bisa mengakses fungsi-fungsi yang sudah dibuat.
+```python
+urlpatterns = [
+    path('', show_main, name='show_main'),
+    path('create-item', create_item, name='create_item'),
+    path('xml/', show_xml, name='show_xml'),
+    path('json/', show_json, name='show_json'),
+    path('xml/<int:id>/', show_xml_by_id, name='show_xml_by_id'),
+    path('json/<int:id>/', show_json_by_id, name='show_json_by_id')
+]
+```
+
+## Perbedaan antara *form* `POST` dan `GET` pada Django
+Perbedaan antara `POST` dan `GET` dapat dilihat pada cara pengiriman datanya. Method `POST` akan mengirimkan data yang ditulis pada form tanpa mencantumkan data tersebut ke url sehingga data yang dikirim tidak akan terlihat oleh siapapun. Biasanya method `POST` digunakan untuk mengirimkan data sensitif, seperti *password*. Di sisi lain, method `GET` akan mengirimkan data yang ditulis pada form dan mencantumkan data tersebut sebagai parameter pada url. Selain itu, perbedaan antara `POST` dan `GET` pada Django adalah tujuan penggunaannya, `POST` biasanya digunakan untuk mengirimkan data yang nantinya akan diolah di server atau melakukan perubahan data pada server, sedangkan `GET` digunakan untuk melakukan permintaan yang bersifat membaca saja.
+
+## Perbedaan XML, JSON, dan HTML dalam konteks pengiriman data
+* XML atau *eXtensible Markup Language* dirancang untuk menyimpan dan mengirimkan data. Data pada XML akan direpresentasikan seperti bentuk struktur *tree*. Cara menulisnya adalah dengan menyisipkan data yang ingin disusun pada sepasang *tag* pembuka dan *tag* penutup. Hal tersebut membuat XML memiliki aturan sintaksis yang cukup ketat dan lebih kaku. Selain itu, XML membutuhkan parser khusus untuk memproses data sehingga memakan waktu yang lama untuk mengurai data tersebut.
+* JSON atau *JavaScript Object Notation* adalah format untuk menynusun data yang lebih ringan dan mudah dimengerti dibandingkan dengan XML. Data pada JSON disusun dalam bentuk text sehingga memudahkan kita untuk membaca dan memahami data tersebut. Cara menyusun data pada JSON adalah dengan menggunakan pasangan *key* dan *value*. Selain itu, JSON lebih mudah diproses oleh mesin maupun manusia dibandingkan dengan XML.
+* HTML atau *HyperText Markup Language* biasanya dirancang untuk menampilkan data dalam bentuk halaman web yang nantinya akan di-*render* oleh web browser sehingga data yang ingin dibaca dapat ditampilkan kepada pengguna. HTML bukanlah format untuk menyimpan maupun melakukan pertukaran data seperti XML atau JSON.
+
+## Mengapa JSON sering digunakan dalam pertukaran data antara aplikasi web modern?
+JSON memiliki banyak keunggulan, seperti menggunakan syntax yang mudah dimengerti, lebih mudah diurai datanya dibandingkan XML, memiliki ukuran file yang lebih kecil, dan transmisi data yang lebih cepat.
+
+## Mengakses kelima URL di poin 2 menggunakan Postman
+* HTML (http://localhost:8000)
+ ![alt-text](image/postman_html.png)
+* XML (http://localhost:8000/xml)
+ ![alt-text](image/postman_xml.png)
+* JSON (http://localhost:8000/json)
+ ![alt-text](image/postman_json.png)
+* XML by ID (http://localhost:8000/xml/1)
+ ![alt-text](image/postman_xml_by_id.png)
+* JSON by ID (http://localhost:8000/json/2)
+ ![alt-text](image/postman_json_by_id.png)
+
+   
