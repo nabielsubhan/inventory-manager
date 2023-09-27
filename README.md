@@ -818,7 +818,7 @@ Menambahkan fitur untuk memberikan pesan banyaknya item yang sudah disimpan pada
    from django.http import HttpResponseRedirect
    from django.urls import reverse
    ```
-2. Mengganti kode pada blok `if User is not none` pada fungsi `login_user` menjadi sebagai berikut.
+2. Mengganti kode pada blok `if User is not None` pada fungsi `login_user` menjadi sebagai berikut.
    ```python
    ...
     if user is not None:
