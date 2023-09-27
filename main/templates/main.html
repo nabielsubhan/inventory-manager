@@ -1,7 +1,17 @@
 {% extends 'base.html' %}
 
+{% block meta %}
+    <style>
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10;
+        }
+    </style>
+{% endblock meta %}
+
 {% block content %}
-    <h1>Inventory Manager</h1>
+    <h1>{{ appname }}</h1>
 
     <h5>Name:</h5>
     <p>{{name}}</p>
@@ -18,7 +28,7 @@
             <th>Name</th>
             <th>Amount</th>
             <th>Description</th>
-            <th>Date Added</th>
+            <th></th>
         </tr>
 
         {% comment %} Berikut cara memperlihatkan data item di bawah baris ini {% endcomment %}
@@ -28,7 +38,20 @@
                 <td>{{item.name}}</td>
                 <td>{{item.amount}}</td>
                 <td>{{item.description}}</td>
-                <td>{{item.date_added}}</td>
+                <td class="item-actions">
+                    <form method="POST" action="{% url 'main:add_item' item.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="add">+</button>
+                    </form>
+                    <form method="POST" action="{% url 'main:reduce_item' item.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="reduce">-</button>
+                    </form>
+                    <form method="POST" action="{% url 'main:delete_item' item.id %}">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="delete">Delete</button>
+                    </form>
+                </td>
             </tr>
         {% endfor %}
     </table>
@@ -38,6 +61,14 @@
     <a href="{% url 'main:create_item' %}">
         <button>
             Add New Item
+        </button>
+    </a>
+
+    <h5>Sesi terakhir login: {{ last_login }}</h5>
+
+    <a href="{% url 'main:logout' %}">
+        <button>
+            Logout
         </button>
     </a>
 {% endblock content %}
