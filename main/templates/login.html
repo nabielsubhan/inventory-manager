@@ -5,41 +5,44 @@
 {% endblock meta %}
 
 {% block content %}
+<nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;"">
+    <h1>Inventory Manager</h1>
+</nav>
 
-<div class = "login">
+<section>
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <div class="col-12 col-sm-8 col-md-6 m-auto">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <input type="text" name="username" id="" class="form-control my-3 py-2" placeholder="Username">
+                            <input type="password" name="password" id="" class="form-control my-3 py-2" placeholder="Password">
+                            <div class="text-center">
+                                <input class="btn btn-success" type="submit" value="Login" style="margin-top: 20px; margin-bottom: 20px;">
+                            </div>
 
-    <h1>Login</h1>
+                            {% if messages %}
+                                <ul>
+                                {% for message in messages %}
+                                    <li>{{ message }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
 
-    <form method="POST" action="">
-        {% csrf_token %}
-        <table>
-            <tr>
-                <td>Username: </td>
-                <td><input type="text" name="username" placeholder="Username" class="form-control"></td>
-            </tr>
-                    
-            <tr>
-                <td>Password: </td>
-                <td><input type="password" name="password" placeholder="Password" class="form-control"></td>
-            </tr>
+                            <div class="text-center">
+                                Don't have an account yet? <a href="{% url 'main:register' %}">Register Now</a>
+                            </div>
 
-            <tr>
-                <td></td>
-                <td><input class="btn login_btn" type="submit" value="Login"></td>
-            </tr>
-        </table>
-    </form>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-    {% if messages %}
-        <ul>
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}     
-        
-    Don't have an account yet? <a href="{% url 'main:register' %}">Register Now</a>
 
-</div>
 
 {% endblock content %}
