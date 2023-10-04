@@ -946,3 +946,371 @@ Untuk mengatasi ancaman tersebut, penggunaan *cookie* perlu dikelola dengan baik
        </form>
    </td>
    ``` 
+
+# Tugas 5: Desain Web menggunakan HTML, CSS dan Framework CSS
+
+## Menambahkan Bootstrap dan JavaScript ke aplikasi
+* Pada file `base.html` yang ada pada folder root, tambahkan kode berikut untuk memasukkan Bootstrap dan Javascript ke aplikasi.
+   ```html
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-KyZXEAg3QhqLMpG8r+J4jsl5c9zdLKaUk5Ae5f5b1bw6AUn5f5v8FZJoMxm6f5cH1" crossorigin="anonymous"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous</script>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"</script>
+   ```
+## Menambahkan *navbar* pada aplikasi
+* Tambahkan kode berikut untuk membuat navbar pada aplikasi
+  ```html
+  <nav class="navbar navbar-expand" style="background-color: #00796B;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">{{ appname }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                </ul>
+            
+            <div class="dropdown">
+                <button class="btn btn-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ name }}
+                </button>
+                <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'main:logout' %}">Logout</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </nav> 
+  ```
+
+## Menambahkan fitur *edit* pada aplikasi
+1. Buat fungsi `edit_item` pada file `views.py`.
+   ```python
+   def edit_item(request, id):
+    # Get product berdasarkan ID
+    item = Item.objects.get(pk = id)
+
+    # Set product sebagai instance dari form
+    form = ItemForm(request.POST or None, instance=item)
+
+    if form.is_valid() and request.method == "POST":
+        # Simpan form dan kembali ke halaman awal
+        form.save()
+        return HttpResponseRedirect(reverse('main:show_main'))
+
+    context = {'form': form}
+    return render(request, "edit_item.html", context)
+   ```
+2. Import fungsi tersebut ke file `urls.py` dan tambahkan *path*-urlnya ke variabel `urlpatterns`.
+   ```python
+   from main.views import edit_product
+   ```
+   ```python
+   path('edit-product/<int:id>', edit_product, name='edit_product'),
+   ```
+3. Buat file baru dengan nama `edit_item.html` pada subdirektori main/templates.
+   ```html
+   {% extends 'base.html' %}
+
+    {% load static %}
+    
+    {% block content %}
+    
+    <h1>Edit Product</h1>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table>
+            {{ form.as_table }}
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit" value="Edit Product"/>
+                </td>
+            </tr>
+        </table>
+    </form>
+    
+    {% endblock %}
+   ```
+4. Tambahkan *button* Edit pada file main.html di setiap baris pada tabel barang.
+   ```html
+   <td>
+        <a href="{% url 'main:edit_product' product.pk %}">
+            <button>
+                Edit
+            </button>
+        </a>
+    </td>
+   ```
+
+## Mendesain halaman Login
+1. Menambahkan *navbar* pada halaman login dengan pilihan desain dari Bootstrap.
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;"">
+    <h1>Inventory Manager</h1>
+   </nav>
+   ```
+2. Mengganti bagian form menjadi sebagai berikut.
+   ```html
+   <section>
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <div class="col-12 col-sm-8 col-md-6 m-auto">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <input type="text" name="username" id="" class="form-control my-3 py-2" placeholder="Username">
+                            <input type="password" name="password" id="" class="form-control my-3 py-2" placeholder="Password">
+                            <div class="text-center">
+                                <input class="btn btn-success" type="submit" value="Login" style="margin-top: 20px; margin-bottom: 20px;">
+                            </div>
+
+                            {% if messages %}
+                                <ul>
+                                {% for message in messages %}
+                                    <li>{{ message }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                            <div class="text-center">
+                                Don't have an account yet? <a href="{% url 'main:register' %}">Register Now</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   </section>
+   ```
+
+## Mendesain halaman register
+1. Menambahkan *navbar* pada halaman register dengan pilihan desain dari Bootstrap.
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;">
+    <h1>Inventory Manager</h1>
+   </nav>
+   ```
+2. Menambahkan elemen `div` dengan pilihan desain dari Bootstrap untuk memosisikan form di tengah layar.
+   ```html
+   <div class="h-100 d-flex align-items-center justify-content-center" style="margin-top: 100px;">
+    <form method="POST">  
+        {% csrf_token %}  
+        <table style="justify-items: center;">  
+            {{ form.as_table }}  
+            <tr>  
+                <td></td>
+                <td><input type="submit" name="submit" value="Daftar" class="btn btn-success"></td>  
+            </tr>  
+        </table>  
+    </form>
+
+    {% if messages %}  
+        <ul>   
+            {% for message in messages %}  
+                <li>{{ message }}</li>  
+                {% endfor %}  
+        </ul>   
+    {% endif %}
+   </div>
+   ```
+
+## Mendesain halaman Main
+1. Menambahkan *navbar* dengan desian dari Bootstrap
+   ```html
+   <nav class="navbar navbar-expand" style="background-color: #00796B;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">{{ appname }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                </ul>
+            
+            <div class="dropdown">
+                <button class="btn btn-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ name }}
+                </button>
+                <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'main:logout' %}">Logout</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+   ```
+2. Mengganti bagian tabel dengan menambahkan komponen `div` dan menambahkan *class* untuk desain di setiap komponennya.
+   ```html
+   <div class="container main">
+    
+        <div class="container">
+            <p>Kamu menyimpan {{ items|length }} item pada aplikasi ini</p>
+        </div>
+        
+        {% if items %}
+        <table class="table table-bordered">
+            <tr>
+                <th>Name</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th></th>
+            </tr>
+    
+            {% comment %} Berikut cara memperlihatkan data item di bawah baris ini {% endcomment %}
+    
+            {% for item in items %}
+                <tr>
+                    <td>{{item.name}}</td>
+                    <td>{{item.amount}}</td>
+                    <td>{{item.description}}</td>
+                    <td class="item-actions">
+                        <div class="btn-group" role="group" aria-label="Basic outlined example">
+                            <form method="POST" action="{% url 'main:add_item' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="add" class="btn btn-outline-success">+</button>
+                            </form>
+                            <form method="POST" action="{% url 'main:reduce_item' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="reduce" class="btn btn-outline-warning">-</button>
+                            </form>
+                            <a href="{% url 'main:edit_item' item.pk %}">
+                                <button type="button" class="btn btn-outline-secondary">Edit</button>
+                            </a>
+                            <form method="POST" action="{% url 'main:delete_item' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="delete" class="btn btn-outline-danger">Delete</button>
+                            </form>
+                          </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    
+        <br />
+    
+        <a href="{% url 'main:create_item' %}">
+            <button class="btn" style="background-color: #B2DFDB;">
+                Add New Item
+            </button>
+        </a>
+    </div>
+   ```
+3. Menambahkan bagian *footer*
+   ```html
+   <div class="footer">
+        <div class="text-success"><hr></div>
+        <p class="font-monospace" style="font-size: small;">Sesi terakhir login: {{ last_login }}</p>
+   </div>
+   ```
+
+## Mendesain halaman *edit_item* dan *create_item*
+1. Menambahkan navbar pada kedua file, yaitu file `create_item.html` dan `edit_item.html`
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;">
+    <h1>Add New Item</h1>
+   </nav>
+   ```
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;">
+    <h1>Edit Item</h1>
+   </nav>
+   ```
+2. Mengubah form di kedua file dengan menambahkan elemen `div` dan gunakan *class* dari Bootstrap untuk mendesainnya.
+   ```html
+   <div class="h-100 d-flex align-items-center justify-content-center" style="margin-top: 100px;">
+    <form method="POST">  
+        {% csrf_token %}  
+        <table style="justify-items: center;">  
+            {{ form.as_table }}  
+            <tr>  
+                <td></td>
+                <td><input type="submit" value="Add Item" class="btn btn-success"></td>  
+            </tr>  
+        </table>  
+    </form>
+   </div>
+   ```
+   ```html
+   <div class="h-100 d-flex align-items-center justify-content-center" style="margin-top: 100px;">
+    <form method="POST">  
+        {% csrf_token %}  
+        <table style="justify-items: center;">  
+            {{ form.as_table }}  
+            <tr>  
+                <td></td>
+                <td><input type="submit" value="Add Item" class="btn btn-success"></td>  
+            </tr>  
+        </table>  
+    </form>
+   </div>
+   ```
+## Jelaskan manfaat dari setiap *element selector* dan kapan waktu yang tepat untuk menggunakannya.
+*Element selector* berfungsi untuk memilih elemen tertentu pada file HTML yang dipilih sesuai dengan tag elemennya untuk dimodifikasi tampilannya, sebagai contoh:
+```css
+p {
+  font-size: 16px;
+}
+
+h1 {
+  font-family: "Arial", sans-serif;
+}
+
+button {
+  background-color: #0077b5;
+}
+```
+Dari contoh di atas, itu artinya semua elemen p (*paragraph*), h1, dan *button* yang ada di file HTML tersebut akan dimodifikasi sesuai dengan *style* di atas. *Element selector* baik digunakan ketika ingin menyeragamkan *style* pada elemen yang sama di file HTML tertentu sehingga akan meningkatkan konsistensi gaya tampilannya. Selain itu, penggunaan *element selector* juga memudahkan kita untuk mengubah *style* banyak elemen yang sama secara sekaligus hanya dengan menggunakan satu *element selector*.
+
+## Jelaskan HTML5 Tag yang kamu ketahui.
+1. `<nav>`
+   Tag `<nav>` atau biasa disebut sebagai *navigation bar* digunakan sebagai tempat mengumpulkan tautan ke menu-menu yang ada pada halaman web. Contohnya adalah seperti berikut.
+   ```html
+   <nav>
+     <a href="#">Home</a>
+     <a href="#">About Us</a>
+     <a href="#">Logout</a> 
+   </nav>
+   ```
+2. `<div`
+   Tag `<div>` berfungsi sebagai *container* yang di dalamnya bisa dimasukkan elemen-elemen lain dengan tujuan untuk mengelompokkan bagian tertentu pada file HTML.
+3. `<ul>`, `<ol>`, `<li>`
+   Tag `<ul>` sebutannya adalah *unordered list*, artinya digunakan untuk membuat sebuah list item tanpa memiliki urutan, biasanya setiap item diberi tanda dot. Tag `<ol>` sebutannya adalah *ordered list*, berarti digunakan untuk membuat sebuah list item yang memiliki urutan, biasanya setiap item diberi angka dari 1 hingga seterusnya. Tag `<li>` sebutannya adalah *list* digunakan untuk mendeklarasikan setiap item yang ingin dimasukkan pada tag `<ul` dan tag `<ol>`. Contoh penggunaannya adalah sebagai berikut.
+   ```html
+   <ul>
+     <li>Item 1</li>
+     <li>Item 2</li>
+   </ul>
+
+   <ol>
+     <li>Item 1</li>
+     <li>Item 2</li>
+   </ol>
+   ```
+4. `<img>`
+   Tag `<img>` digunakan untuk menaruh link gambar yang ingin ditampilkan pada dokumen HTML. Contoh penggunaannya adalah sebagai berikut.
+   ```html
+   <img src="contoh.jpg" alt="Ini adalah contoh gambar">
+   ```
+5. `<p>`
+   Tag `<p>` digunakan untuk mengatur teks dalam bentuk paragraf pada dokumen HTML. Contoh penggunaannya adalah sebagai berikut.
+   ```html
+   <p>Ini adalah contoh sebuah paragraf</p>
+   ```
+
+## Jelaskan perbedaan antara margin dan padding.
+### Margin
+Margin adalah jarak kosong yang terdapat pada bagian luar dari suatu elemen. Penggunaan margin akan memengaruhi tata letak dari elemen di sekitarnya sehingga terdapat jarak antara elemen yang satu dengan elemen lainnya.
+### Padding
+Padding adalah jarak di bagian dalam elemen yang dimulai dari tepi elemen hingga jarak yang ditentukan. Padding juga bisa dimodifikasi dengan memberikan warna. Penggunaannya tidak akan memengaruhi tata letak elemen lain di luarnya. Padding biasanya digunakan untuk memberikan sebuah jarak antara isi konten dengan pembatas dari elemen tersebut.
+
+## Jelaskan perbedaan antara framework CSS Tailwind dan Bootstrap. Kapan sebaiknya kita menggunakan Bootstrap daripada Tailwind, dan sebaliknya?
+Perbedaan antara *framework* CSS Tailwind dan Bootstrap diantaranya adalah cara kerjanya. Cara kerja Tailwind mengikuti pendekatan *utility-first*, yaitu dengan menggabungkan kelas-kelas *utility* yang ada pada suatu komponen sehingga desain yang dibuat akan unik sesuai dengan kelas-kelas yang digunakan, sedangkan Bootstrap bekerja dengan memberikan *style* komponen yang siap pakai sehingga desain yang digunakan tidak akan unik karena sudah dirancang oleh Bootstrap.
+
+Penggunaan Bootstrap akan lebih baik daripada Tailwind ketika kita ingin membuat aplikasi walam waktu yang cepat dengan memiliki komponen desain yang sudah dirancang tanpa perlu membuatnya secara manual, sedangkan penggunaan Tailwind lebih baik daripada Bootstrap ketika kita ingin mendesain setiap komponen yang ada pada aplikasi dengan desain yang tinggi dan unik.
+
