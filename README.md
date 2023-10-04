@@ -575,4 +575,742 @@ Menambahkan fitur untuk memberikan pesan banyaknya item yang sudah disimpan pada
     <p>Kamu menyimpan {{ items|length }} item pada aplikasi ini</p>
 </div>
 ```
-   
+
+# Tugas 4: Implementasi Autentikasi, Session, dan Cookies pada Django
+## Mengimplementasikan fungsi registrasi, login, dan logout untuk memungkinkan pengguna untuk mengakses aplikasi sebelumnya dengan lancar.
+
+1. Membuat Fungsi dan Form Registrasi
+   * Menyalakan *virtual environment* terlebih dahulu dengan menggunakan perintah `env\Sccripts\activate.bat` pada direktori `Tugas 2`.
+   * Membuka file `views.py` pada direktori `main` dan tambahkan beberapa *import* berikut.
+     ```python
+     from django.shortcuts import redirect
+     from django.contrib.auth.forms import UserCreationForm
+     from django.contrib import messages  
+     ```
+   * Membuat fungsi `register` untuk membuat formulir registrasi untuk membuat akun user ketika ingin mengakses aplikasi.
+     ```python
+     def register(request):
+        form = UserCreationForm()
+
+        if request.method == "POST":
+            form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account has been successfully created!')
+            return redirect('main:login')
+        context = {'form':form}
+        return render(request, 'register.html', context)
+     ```
+   * Membuat file `register.html` pada direktori `main/templates` untuk membuat *template* halaman ketika melakukan *register* akun.
+     ```html
+     {% extends 'base.html' %}
+
+     {% block meta %}
+        <title>Register</title>
+     {% endblock meta %}
+    
+     {% block content %}  
+    
+     <div class = "login">
+        
+        <h1>Register</h1>  
+    
+            <form method="POST" >  
+                {% csrf_token %}  
+                <table>  
+                    {{ form.as_table }}  
+                    <tr>  
+                        <td></td>
+                        <td><input type="submit" name="submit" value="Daftar"/></td>  
+                    </tr>  
+                </table>  
+            </form>
+    
+        {% if messages %}  
+            <ul>   
+                {% for message in messages %}  
+                    <li>{{ message }}</li>  
+                    {% endfor %}  
+            </ul>   
+        {% endif %}
+    
+     </div>  
+    
+     {% endblock content %}
+     ```
+   * *Import* fungsi `register` ke dalam `urls.py` dan tambahkan *path*-nya ke `urlpatterns`
+     ```python
+     from main.views import register
+     ```
+     ```python
+     ...
+     path('register/', register, name='register'), 
+     ...
+     ```
+2. Membuat Fungsi Login
+   * Membuka file `views.py` pada direktori `main` dan tambahkan *import* berikut.
+     ```python
+     from django.contrib.auth import authenticate, login 
+     ```
+   * Tambahkan fungsi `login_user` untuk mengautentikasi user yang ingin masuk aplikasi.
+     ```python
+     def login_user(request):
+     if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('main:show_main')
+        else:
+            messages.info(request, 'Sorry, incorrect username or password. Please try again.')
+     context = {}
+     return render(request, 'login.html', context)
+     ```
+   * Membuat file `login.html` pada direktori `main/templates` untuk membuat *template* halaman ketika melakukan *login* akun.
+     ```html
+     {% extends 'base.html' %}
+
+     {% block meta %}
+     <title>Login</title>
+     {% endblock meta %}
+
+     {% block content %}
+
+     <div class = "login">
+
+     <h1>Login</h1>
+
+     <form method="POST" action="">
+        {% csrf_token %}
+        <table>
+            <tr>
+                <td>Username: </td>
+                <td><input type="text" name="username" placeholder="Username" class="form-control"></td>
+            </tr>
+                    
+            <tr>
+                <td>Password: </td>
+                <td><input type="password" name="password" placeholder="Password" class="form-control"></td>
+            </tr>
+
+            <tr>
+                <td></td>
+                <td><input class="btn login_btn" type="submit" value="Login"></td>
+            </tr>
+        </table>
+     </form>
+
+     {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+     {% endif %}     
+        
+     Don't have an account yet? <a href="{% url 'main:register' %}">Register Now</a>
+
+     </div>
+
+     {% endblock content %}
+     ```
+   * *Import* fungsi `login_user` ke dalam `urls.py` dan tambahkan *path*-nya ke `urlpatterns`
+     ```python
+     from main.views import register, login
+     ```
+     ```python
+     ...
+     path('login/', login_user, name='login'),
+     ...
+     ```
+3. Membuat Fungsi Logout
+   *  Membuka file `views.py` pada direktori `main` dan tambahkan *import* berikut.
+     ```python
+     from django.contrib.auth import authenticate, login, logout
+     ```
+   * Tambahkan fungsi `logout_user` untuk melakukan mekanisme *logout*.
+     ```python
+     def logout_user(request):
+         logout(request)
+         return redirect('main:login')
+     ```
+   * Tambahkan *button logout* pada file `main.html` setelah *hyperlink tag* untuk *Add New Item*
+     ```html
+     ...
+     <a href="{% url 'main:logout' %}">
+     <button>
+        Logout
+     </button>
+     </a>
+     ...
+     ```
+   * *Import* fungsi `logout_user` ke dalam `urls.py` dan tambahkan *path*-nya ke `urlpatterns`
+     ```python
+     from main.views import register, login_user, logout_user
+     ```
+     ```python
+     ...
+     path('logout/', logout_user, name='logout'),
+     ...
+     ```
+4. Tambahkan Restriksi Akses Halaman Main
+   * Membuka file `views.py` pada direktori `main` dan tambahkan *import* berikut.
+     ```python
+     from django.contrib.auth.decorators import login_required
+     ```
+   * Tambahkan kode berikut di atas fungsi `show_main` untuk merestriksi halaman *main* agar hanya dapat diakses oleh pengguna yang sudah *login*.
+     ```python
+     ...
+     @login_required(login_url='/login')
+     def show_main(request):
+     ...
+     ```
+
+## Membuat dua akun pengguna dengan masing-masing 3 *dummy data*
+* Username = PenggunaPertama
+  ![alt-text](image/PenggunaPertama.png)
+* Username = PenggunaKedua
+  ![alt-text](image/PenggunaKedua.png)
+
+## Menghubungkan model `Item` dengan `User`.
+1. Buka `models.py` pada direktori `main` dan tambahkan *import* berikut.
+   ```python
+   from django.contrib.auth.models import User
+   ```
+2. Tambahkan potongan kode berikut pada bagian class Item.
+   ```python
+   class Item(models.Model):
+       user = models.ForeignKey(User, on_delete=models.CASCADE)
+   ...
+   ```
+3. Buka `views.py` dan ubah potongan kode pada bagian fungsi `create_item` menjadi sebagai berikut.
+   ```python
+   def create_product(request):
+       form = ProductForm(request.POST or None)
+
+       if form.is_valid() and request.method == "POST":
+           product = form.save(commit=False)
+           product.user = request.user
+           product.save()
+           return HttpResponseRedirect(reverse('main:show_main'))
+       ...
+   ```
+4. Ubah fungsi `show_main` menjadi sebagai berikut.
+   ```python
+   def show_main(request):
+       products = Product.objects.filter(user=request.user)
+
+       context = {
+           'name': request.user.username,
+        ...
+    ...
+   ```
+5. Simpan semua perubahan dan lakukan perintah `python manage.py makemigrations` untuk melakukan migrasi model.
+6. Jika terjadi error ketika migrasi model, ketik 1 untuk menetapkan *default value* untuk *field user* pada semua *row* yang telah dibuat di *database*.
+7. Ketik angka 1 lagi untuk menetapkan user dengan ID 1 (yang sudah kita buat sebelumnya) pada model yang sudah ada.
+8. Jalankan perintah `python manage.py migrate` untuk mengaplikasikan migrasi yang sudah dilakukan sebelumnya.
+
+## Menampilkan detail informasi pengguna yang sedang *logged in* seperti username dan menerapkan cookies seperti *last login* pada halaman utama aplikasi.
+1. Buka `views.py` dan tambahkan beberapa *import* berikut jika belum ada.
+   ```python
+   import datetime
+   from django.http import HttpResponseRedirect
+   from django.urls import reverse
+   ```
+2. Mengganti kode pada blok `if User is not None` pada fungsi `login_user` menjadi sebagai berikut.
+   ```python
+   ...
+    if user is not None:
+        login(request, user)
+        response = HttpResponseRedirect(reverse("main:show_main")) 
+        response.set_cookie('last_login', str(datetime.datetime.now()))
+        return response
+    ...
+   ```
+   Kode tersebut akan menambahkan *cookie* `last_login` untuk memberikan informasi kapan terakhir kali pengguna melakukan *login*.
+3. Tambahkan potongan kode berikut pada fungsi `show_main` ke dalam variabel `context`.
+   ```python
+   'last_login': request.COOKIES['last_login'],
+   ```
+4. Ubah fungsi `logout_user` menjadi sebagai berikut.
+   ```python
+   def logout_user(request):
+       logout(request)
+       response = HttpResponseRedirect(reverse('main:login'))
+       response.delete_cookie('last_login')
+       return response
+   ```
+5. Buka berkas `main.html`, tambahkan potongan kode berikut di antara tabel dan tombol *logout* untuk menampilkan data *last login*.
+   ```html
+   <h5>Sesi terakhir login: {{ last_login }}</h5>
+   ```
+
+## Apa itu Django `UserCreationForm`, apa kelebihan dan kekurangannya?
+Django `UserCreationForm` adalah suatu form autentikasi yang disediakan oleh Django untuk membantu pembuatan user baru. `UserCreationForm` dapat digunakan dengan cara meng-*import* nya dari `django.contrib.auth.forms`. Form tersebut terdiri dari *field username, password1,* dan *password2* (untuk konfirmasi).
+* Kelebihan
+  * Sederhana dan mudah digunakan, `UserCreationForm` sangat mudah digunakan karena hanya perlu menambahkan sedikit baris kode saja untuk membuat sebuah form autentikasi.
+  * Tidak perlu membuat fungsi baru untuk melakukan validasi dari input karena Django sudah menyiapkan validasi bawaan untuk `UserCreationForm`.
+* Kekurangan
+  * Tidak efektif digunakan ketika diperlukan persyaratan lebih untuk melakukan proses pembuatan user baru karena fitur yang ditawarkan tidak bisa mengatasi persyaratan yang kompleks.
+  * Bentuk tampilan yang terlalu umum sehingga memerlukan penyesuaian dan kostumisasi lebih untuk menyocokkannya dengan tema aplikasi kita.
+
+## Apa perbedaan antara autentikasi dan otorisasi dalam konteks Django, dan mengapa keduanya penting?
+### Autentikasi
+Autentikasi adalah suatu proses untuk memverifikasi pengguna yang ingin masuk ke dalam aplikasi. Contoh pengaplikasiannya pada Django adalah dengan adanya form *login* ketika ingin memasuki suatu aplikasi. Django akan memvalidasi input *username* dan *password* yang diberikan user lewat form dan menentukan apakah data yang diberikan cocok dengan data yang ada di *database* atau tidak.
+### Otorisasi
+Otorisasi adalah sebuah proses untuk mengecek apakah suatu user memiliki hak untuk mengakses data atau halaman tertentu pada aplikasi. Django memungkinkan kita untuk melakukan otorisasi pada tingkat model dan objek.
+### Mengapa keduanya penting?
+Kedua hal tersebut memiliki banyak manfaat, diantaranya:
+* Menjaga keamanan data pengguna pada aplikasi dengan memastikan bahwa hanya pengguna yang sah dan sesuai yang bisa mengakses datanya sendiri lewat proses autentikasi.
+* Terjaganya sumber daya atau fitur pada aplikasi dengan memastikan setiap pengguna hanya bisa melakukan hal-hal yang sesuai dengan izin aksesnya pada plikasi tersebut lewat proses otorisasi.
+* Autentikasi dan otorisasi juga membantu untuk mengurangi celah-celah rentan pada keamanan, seperti pencurian data dan berbagai serangan peretasan.
+
+## Apa itu *cookies* dalam konteks aplikasi web, dan bagaimana Django menggunakan cookies untuk mengelola data sesi pengguna?
+*Cookies* adalah sejumlah data yang disimpan pada web server yang berisi data pengguna yang nantinya data tersebut dapat digunakan kembali ketika pengguna yang sama kembali mengunjungi aplikasi tersebut. Tujuan dari penggunaan *cookies* adalah sebagai berikut:
+1. Membantu proses autentikasi pengguna ketika memasuki aplikasi sehingga pengguna tidak perlu melakukan autentikasi terus menerus ketika memasuki halaman yang berbeda pada aplikasi selama sesi pengguna.
+2. Membantu dalam mengetahui preferensi pengguna ketika menggunakan aplikasi, seperti tampilan dan bahasa yang digunakan.
+3. Membantu dalam menilai kinerja suatu fitur dengan menganalisis aktivitas pengguna di setiap fitur yang ada pada aplikasi.
+4. Membantu dalam menyimpan data pengguna pada aplikasi.
+
+Berikut adalah mekanisme Django ketika menggunakan *cookies* untuk mengelola data sesi pengguna:
+* Ketika pengguna pertama kali mengakses web Django, *web server* akan membuat sesi ID unik untuk pengguna tersebut.
+* Sesi tersebut kemudian disimpan dalam sebuah *cookie* yang dikirimkan ke pengguna melalui respons HTTP.
+* Setelah sesi pengguna aktif, *cookie* sesi tersebut akan disematkan ke dalam permintaan HTTP pengguna setiap kali pengguna melakukan *request* dan dilakukan penyocokan dengan data sesi yang ada di server yang membuat server tetap mengenali pengguna.
+* Setelah mengidentifikasi sesi, Django dapat mulai membaca dan menulis data sesi untuk menyimpan informasi tentang perilaku pengguna.
+
+## Apakah penggunaan cookies aman secara default dalam pengembangan web, atau apakah ada risiko potensial yang harus diwaspadai?
+Secara umum, penggunaan *cookie* cenderung aman, tetapi jika tidak dikelola dengan benar, terdapat ancaman yang muncul dan perlu untuk diwaspadai. Ancaman tersebut diantara lain adalah:
+* Serangan *Cross-Site Scripting* (XSS), yaitu diinjeksikannya *script* berbahaya ke dalam aplikasi yang nantinya digunakan untuk mencuri *cookie* pengguna lain.
+* Serangan *Cross-Site Request Forgery* (CSRF), yaitu pembuatan *request* palsu yang diotorisasi sebagai pengguna yang sah untuk mengambil *cookies* yang masih ada pada situs web tersebut.
+* *Cookie Sniffing*, yaitu mencuri *cookies* pengguna yang tersambung dalam jaringan internet yang tidak aman, contohnya Wi-Fi publik.
+* Ancaman bocornya informasi sensitif, seperti *password* dan data penting lainnya jika disimpan di *cookie*.
+  
+Untuk mengatasi ancaman tersebut, penggunaan *cookie* perlu dikelola dengan baik dan dilakukan praktik keamanan, seperti penggunaan flag `HttpOnly` untuk mencegah serangan XSS, pemberian flag `secure` agar *cookies* tersebut dikirimkan melalui permintaan `HTTPS`, mengenkripsi perangkat pengguna dan server dengan baik, dan tidak menyimpan informasi dan data penting pada *cookie*.
+
+## BONUS
+### Membuat tombol `add`, `reduce`, dan `delete`
+1. Buka `views.py` dan tambahkan fungsi `add_item`, `reduce_item`, dan `delete_item` yang masing-masing fungsi menerima parameter *request* dan id.
+   ```python
+   def add_item(request, id):
+    if request.method == "POST":
+        item = Item.objects.get(pk=id)
+        item.amount += 1;
+        item.save()
+    return HttpResponseRedirect(reverse('main:show_main'))
+   ```
+   ```python
+   def reduce_item(request, id):
+    if request.method == "POST":
+        item = Item.objects.get(pk=id)
+        if item.amount > 1:
+            item.amount -= 1;
+            item.save()
+        else:
+            item.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))
+   ```
+   ```python
+   def delete_item(request, id):
+    if request.method == "POST":
+        item = Item.objects.get(pk=id)
+        item.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))
+   ```
+2. *Import* ketiga fungsi tersebut ke dalam `urls.py` dan tambahkan *path*-nya ke variabel `urlpatterns`.
+   ```python
+   from main.views import add_item, reduce_item, delete_item
+   ```
+   ```python
+   urlpatterns = [
+       ...
+       path('add-item/<int:id>/', add_item, name='add_item'),
+       path('reduce-item/<int:id>/', reduce_item, name='reduce_item'),
+       path('delete-item/<int:id>/', delete_item, name='delete_item'),
+   ]
+   ```
+3. Tambahkan kolom baru pada tabel di file `main.html`, dan tambahkan *button* untuk *add*, *reduce*, dan *delete* pada tiap barisnya.
+   ```html
+   <td class="item-actions">
+       <form method="POST" action="{% url 'main:add_item' item.id %}">
+           {% csrf_token %}
+           <button type="submit" name="action" value="add">+</button>
+       </form>
+       <form method="POST" action="{% url 'main:reduce_item' item.id %}">
+           {% csrf_token %}
+           <button type="submit" name="action" value="reduce">-</button>
+       </form>
+       <form method="POST" action="{% url 'main:delete_item' item.id %}">
+           {% csrf_token %}
+           <button type="submit" name="action" value="delete">Delete</button>
+       </form>
+   </td>
+   ``` 
+
+# Tugas 5: Desain Web menggunakan HTML, CSS dan Framework CSS
+
+## Menambahkan Bootstrap dan JavaScript ke aplikasi
+* Pada file `base.html` yang ada pada folder root, tambahkan kode berikut untuk memasukkan Bootstrap dan Javascript ke aplikasi.
+   ```html
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha384-KyZXEAg3QhqLMpG8r+J4jsl5c9zdLKaUk5Ae5f5b1bw6AUn5f5v8FZJoMxm6f5cH1" crossorigin="anonymous"></script>
+   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous</script>
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"</script>
+   ```
+## Menambahkan *navbar* pada aplikasi
+* Tambahkan kode berikut untuk membuat navbar pada aplikasi
+  ```html
+  <nav class="navbar navbar-expand" style="background-color: #00796B;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">{{ appname }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                </ul>
+            
+            <div class="dropdown">
+                <button class="btn btn-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ name }}
+                </button>
+                <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'main:logout' %}">Logout</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </nav> 
+  ```
+
+## Menambahkan fitur *edit* pada aplikasi
+1. Buat fungsi `edit_item` pada file `views.py`.
+   ```python
+   def edit_item(request, id):
+    # Get product berdasarkan ID
+    item = Item.objects.get(pk = id)
+
+    # Set product sebagai instance dari form
+    form = ItemForm(request.POST or None, instance=item)
+
+    if form.is_valid() and request.method == "POST":
+        # Simpan form dan kembali ke halaman awal
+        form.save()
+        return HttpResponseRedirect(reverse('main:show_main'))
+
+    context = {'form': form}
+    return render(request, "edit_item.html", context)
+   ```
+2. Import fungsi tersebut ke file `urls.py` dan tambahkan *path*-urlnya ke variabel `urlpatterns`.
+   ```python
+   from main.views import edit_product
+   ```
+   ```python
+   path('edit-product/<int:id>', edit_product, name='edit_product'),
+   ```
+3. Buat file baru dengan nama `edit_item.html` pada subdirektori main/templates.
+   ```html
+   {% extends 'base.html' %}
+
+    {% load static %}
+    
+    {% block content %}
+    
+    <h1>Edit Product</h1>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table>
+            {{ form.as_table }}
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit" value="Edit Product"/>
+                </td>
+            </tr>
+        </table>
+    </form>
+    
+    {% endblock %}
+   ```
+4. Tambahkan *button* Edit pada file main.html di setiap baris pada tabel barang.
+   ```html
+   <td>
+        <a href="{% url 'main:edit_product' product.pk %}">
+            <button>
+                Edit
+            </button>
+        </a>
+    </td>
+   ```
+
+## Mendesain halaman Login
+1. Menambahkan *navbar* pada halaman login dengan pilihan desain dari Bootstrap.
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;"">
+    <h1>Inventory Manager</h1>
+   </nav>
+   ```
+2. Mengganti bagian form menjadi sebagai berikut.
+   ```html
+   <section>
+    <div class="container mt-5 pt-5">
+        <div class="row">
+            <div class="col-12 col-sm-8 col-md-6 m-auto">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <input type="text" name="username" id="" class="form-control my-3 py-2" placeholder="Username">
+                            <input type="password" name="password" id="" class="form-control my-3 py-2" placeholder="Password">
+                            <div class="text-center">
+                                <input class="btn btn-success" type="submit" value="Login" style="margin-top: 20px; margin-bottom: 20px;">
+                            </div>
+
+                            {% if messages %}
+                                <ul>
+                                {% for message in messages %}
+                                    <li>{{ message }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                            <div class="text-center">
+                                Don't have an account yet? <a href="{% url 'main:register' %}">Register Now</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+   </section>
+   ```
+
+## Mendesain halaman register
+1. Menambahkan *navbar* pada halaman register dengan pilihan desain dari Bootstrap.
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;">
+    <h1>Inventory Manager</h1>
+   </nav>
+   ```
+2. Menambahkan elemen `div` dengan pilihan desain dari Bootstrap untuk memosisikan form di tengah layar.
+   ```html
+   <div class="h-100 d-flex align-items-center justify-content-center" style="margin-top: 100px;">
+    <form method="POST">  
+        {% csrf_token %}  
+        <table style="justify-items: center;">  
+            {{ form.as_table }}  
+            <tr>  
+                <td></td>
+                <td><input type="submit" name="submit" value="Daftar" class="btn btn-success"></td>  
+            </tr>  
+        </table>  
+    </form>
+
+    {% if messages %}  
+        <ul>   
+            {% for message in messages %}  
+                <li>{{ message }}</li>  
+                {% endfor %}  
+        </ul>   
+    {% endif %}
+   </div>
+   ```
+
+## Mendesain halaman Main
+1. Menambahkan *navbar* dengan desian dari Bootstrap
+   ```html
+   <nav class="navbar navbar-expand" style="background-color: #00796B;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">{{ appname }}</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                </ul>
+            
+            <div class="dropdown">
+                <button class="btn btn-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ name }}
+                </button>
+                <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{% url 'main:logout' %}">Logout</a></li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+   ```
+2. Mengganti bagian tabel dengan menambahkan komponen `div` dan menambahkan *class* untuk desain di setiap komponennya.
+   ```html
+   <div class="container main">
+    
+        <div class="container">
+            <p>Kamu menyimpan {{ items|length }} item pada aplikasi ini</p>
+        </div>
+        
+        {% if items %}
+        <table class="table table-bordered">
+            <tr>
+                <th>Name</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th></th>
+            </tr>
+    
+            {% comment %} Berikut cara memperlihatkan data item di bawah baris ini {% endcomment %}
+    
+            {% for item in items %}
+                <tr>
+                    <td>{{item.name}}</td>
+                    <td>{{item.amount}}</td>
+                    <td>{{item.description}}</td>
+                    <td class="item-actions">
+                        <div class="btn-group" role="group" aria-label="Basic outlined example">
+                            <form method="POST" action="{% url 'main:add_item' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="add" class="btn btn-outline-success">+</button>
+                            </form>
+                            <form method="POST" action="{% url 'main:reduce_item' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="reduce" class="btn btn-outline-warning">-</button>
+                            </form>
+                            <a href="{% url 'main:edit_item' item.pk %}">
+                                <button type="button" class="btn btn-outline-secondary">Edit</button>
+                            </a>
+                            <form method="POST" action="{% url 'main:delete_item' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="delete" class="btn btn-outline-danger">Delete</button>
+                            </form>
+                          </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    
+        <br />
+    
+        <a href="{% url 'main:create_item' %}">
+            <button class="btn" style="background-color: #B2DFDB;">
+                Add New Item
+            </button>
+        </a>
+    </div>
+   ```
+3. Menambahkan bagian *footer*
+   ```html
+   <div class="footer">
+        <div class="text-success"><hr></div>
+        <p class="font-monospace" style="font-size: small;">Sesi terakhir login: {{ last_login }}</p>
+   </div>
+   ```
+
+## Mendesain halaman *edit_item* dan *create_item*
+1. Menambahkan navbar pada kedua file, yaitu file `create_item.html` dan `edit_item.html`
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;">
+    <h1>Add New Item</h1>
+   </nav>
+   ```
+   ```html
+   <nav class="navbar navbar-expand justify-content-center" style="background-color: #00796B;">
+    <h1>Edit Item</h1>
+   </nav>
+   ```
+2. Mengubah form di kedua file dengan menambahkan elemen `div` dan gunakan *class* dari Bootstrap untuk mendesainnya.
+   ```html
+   <div class="h-100 d-flex align-items-center justify-content-center" style="margin-top: 100px;">
+    <form method="POST">  
+        {% csrf_token %}  
+        <table style="justify-items: center;">  
+            {{ form.as_table }}  
+            <tr>  
+                <td></td>
+                <td><input type="submit" value="Add Item" class="btn btn-success"></td>  
+            </tr>  
+        </table>  
+    </form>
+   </div>
+   ```
+   ```html
+   <div class="h-100 d-flex align-items-center justify-content-center" style="margin-top: 100px;">
+    <form method="POST">  
+        {% csrf_token %}  
+        <table style="justify-items: center;">  
+            {{ form.as_table }}  
+            <tr>  
+                <td></td>
+                <td><input type="submit" value="Add Item" class="btn btn-success"></td>  
+            </tr>  
+        </table>  
+    </form>
+   </div>
+   ```
+## Jelaskan manfaat dari setiap *element selector* dan kapan waktu yang tepat untuk menggunakannya.
+*Element selector* berfungsi untuk memilih elemen tertentu pada file HTML yang dipilih sesuai dengan tag elemennya untuk dimodifikasi tampilannya, sebagai contoh:
+```css
+p {
+  font-size: 16px;
+}
+
+h1 {
+  font-family: "Arial", sans-serif;
+}
+
+button {
+  background-color: #0077b5;
+}
+```
+Dari contoh di atas, itu artinya semua elemen p (*paragraph*), h1, dan *button* yang ada di file HTML tersebut akan dimodifikasi sesuai dengan *style* di atas. *Element selector* baik digunakan ketika ingin menyeragamkan *style* pada elemen yang sama di file HTML tertentu sehingga akan meningkatkan konsistensi gaya tampilannya. Selain itu, penggunaan *element selector* juga memudahkan kita untuk mengubah *style* banyak elemen yang sama secara sekaligus hanya dengan menggunakan satu *element selector*.
+
+## Jelaskan HTML5 Tag yang kamu ketahui.
+1. `<nav>`
+   Tag `<nav>` atau biasa disebut sebagai *navigation bar* digunakan sebagai tempat mengumpulkan tautan ke menu-menu yang ada pada halaman web. Contohnya adalah seperti berikut.
+   ```html
+   <nav>
+     <a href="#">Home</a>
+     <a href="#">About Us</a>
+     <a href="#">Logout</a> 
+   </nav>
+   ```
+2. `<div`
+   Tag `<div>` berfungsi sebagai *container* yang di dalamnya bisa dimasukkan elemen-elemen lain dengan tujuan untuk mengelompokkan bagian tertentu pada file HTML.
+3. `<ul>`, `<ol>`, `<li>`
+   Tag `<ul>` sebutannya adalah *unordered list*, artinya digunakan untuk membuat sebuah list item tanpa memiliki urutan, biasanya setiap item diberi tanda dot. Tag `<ol>` sebutannya adalah *ordered list*, berarti digunakan untuk membuat sebuah list item yang memiliki urutan, biasanya setiap item diberi angka dari 1 hingga seterusnya. Tag `<li>` sebutannya adalah *list* digunakan untuk mendeklarasikan setiap item yang ingin dimasukkan pada tag `<ul` dan tag `<ol>`. Contoh penggunaannya adalah sebagai berikut.
+   ```html
+   <ul>
+     <li>Item 1</li>
+     <li>Item 2</li>
+   </ul>
+
+   <ol>
+     <li>Item 1</li>
+     <li>Item 2</li>
+   </ol>
+   ```
+4. `<img>`
+   Tag `<img>` digunakan untuk menaruh link gambar yang ingin ditampilkan pada dokumen HTML. Contoh penggunaannya adalah sebagai berikut.
+   ```html
+   <img src="contoh.jpg" alt="Ini adalah contoh gambar">
+   ```
+5. `<p>`
+   Tag `<p>` digunakan untuk mengatur teks dalam bentuk paragraf pada dokumen HTML. Contoh penggunaannya adalah sebagai berikut.
+   ```html
+   <p>Ini adalah contoh sebuah paragraf</p>
+   ```
+
+## Jelaskan perbedaan antara margin dan padding.
+### Margin
+Margin adalah jarak kosong yang terdapat pada bagian luar dari suatu elemen. Penggunaan margin akan memengaruhi tata letak dari elemen di sekitarnya sehingga terdapat jarak antara elemen yang satu dengan elemen lainnya.
+### Padding
+Padding adalah jarak di bagian dalam elemen yang dimulai dari tepi elemen hingga jarak yang ditentukan. Padding juga bisa dimodifikasi dengan memberikan warna. Penggunaannya tidak akan memengaruhi tata letak elemen lain di luarnya. Padding biasanya digunakan untuk memberikan sebuah jarak antara isi konten dengan pembatas dari elemen tersebut.
+
+## Jelaskan perbedaan antara framework CSS Tailwind dan Bootstrap. Kapan sebaiknya kita menggunakan Bootstrap daripada Tailwind, dan sebaliknya?
+Perbedaan antara *framework* CSS Tailwind dan Bootstrap diantaranya adalah cara kerjanya. Cara kerja Tailwind mengikuti pendekatan *utility-first*, yaitu dengan menggabungkan kelas-kelas *utility* yang ada pada suatu komponen sehingga desain yang dibuat akan unik sesuai dengan kelas-kelas yang digunakan, sedangkan Bootstrap bekerja dengan memberikan *style* komponen yang siap pakai sehingga desain yang digunakan tidak akan unik karena sudah dirancang oleh Bootstrap.
+
+Penggunaan Bootstrap akan lebih baik daripada Tailwind ketika kita ingin membuat aplikasi walam waktu yang cepat dengan memiliki komponen desain yang sudah dirancang tanpa perlu membuatnya secara manual, sedangkan penggunaan Tailwind lebih baik daripada Bootstrap ketika kita ingin mendesain setiap komponen yang ada pada aplikasi dengan desain yang tinggi dan unik.
+
