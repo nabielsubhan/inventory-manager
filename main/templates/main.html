@@ -16,6 +16,14 @@
         .footer {
             margin-top: 40px;
         }
+        .btn-add-item {
+            margin-left: 10px;
+            margin-left: 10px;
+            margin-bottom: 30px;
+        }
+        .card {
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 0.0625em 0.0625em, rgba(0, 0, 0, 0.25) 0px 0.125em 0.5em, rgba(255, 255, 255, 0.1) 0px 0px 0px 1px inset;
+        }
     </style>
 {% endblock meta %}
 
@@ -46,62 +54,127 @@
     <div class="container main">
     
         <div class="container">
-            <p>Kamu menyimpan {{ items|length }} item pada aplikasi ini</p>
+            <p id="items-count">Kamu menyimpan {{ items|length }} item pada aplikasi ini</p>
         </div>
         
-        {% if items %}
-        <table class="table table-bordered">
-            <tr>
-                <th>Name</th>
-                <th>Amount</th>
-                <th>Description</th>
-                <th></th>
-            </tr>
-    
-            {% comment %} Berikut cara memperlihatkan data item di bawah baris ini {% endcomment %}
-    
-            {% for item in items %}
-                <tr>
-                    <td>{{item.name}}</td>
-                    <td>{{item.amount}}</td>
-                    <td>{{item.description}}</td>
-                    <td class="item-actions">
-                        <div class="btn-group" role="group" aria-label="Basic outlined example">
-                            <form method="POST" action="{% url 'main:add_item' item.id %}">
-                                {% csrf_token %}
-                                <button type="submit" name="action" value="add" class="btn btn-outline-success">+</button>
-                            </form>
-                            <form method="POST" action="{% url 'main:reduce_item' item.id %}">
-                                {% csrf_token %}
-                                <button type="submit" name="action" value="reduce" class="btn btn-outline-warning">-</button>
-                            </form>
-                            <a href="{% url 'main:edit_item' item.pk %}">
-                                <button type="button" class="btn btn-outline-secondary">Edit</button>
-                            </a>
-                            <form method="POST" action="{% url 'main:delete_item' item.id %}">
-                                {% csrf_token %}
-                                <button type="submit" name="action" value="delete" class="btn btn-outline-danger">Delete</button>
-                            </form>
-                          </div>
-                    </td>
-                </tr>
-            {% endfor %}
-        </table>
-        {% endif %}
-    
-        <br />
-    
-        <a href="{% url 'main:create_item' %}">
-            <button class="btn" style="background-color: #B2DFDB;">
+        <a href="{% url 'main:create_item' %}" class="link-add-item">
+            <button class="btn link-success btn-success btn-add-item" style="background-color: #B2DFDB;">
                 Add New Item
             </button>
         </a>
+        
+        <button type="button" class="btn btn-primary btn-add-item" data-bs-toggle="modal" data-bs-target="#exampleModal">Add Product by AJAX</button>
+        
+        {% if items %}
+        <div class="container" id="item-content"></div>
+        {% endif %}
+    
+    
     </div>
 
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Add New Product</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form" onsubmit="return false;">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="col-form-label">Name:</label>
+                            <input type="text" class="form-control" id="name" name="name"></input>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="col-form-label">Amount:</label>
+                            <input type="number" class="form-control" id="amount" name="amount"></input>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="col-form-label">Description:</label>
+                            <textarea class="form-control" id="description" name="description"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="button_add" data-bs-dismiss="modal">Add Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="footer">
         <div class="text-success"><hr></div>
         <p class="font-monospace" style="font-size: small;">Sesi terakhir login: {{ last_login }}</p>
     </div>
+
+    <script>
+        async function getItems() {
+            return fetch("{% url 'main:get_item_json' %}").then((res) => res.json())
+        }
+
+        async function refreshItems() {
+            document.getElementById("item-content").innerHTML = ""
+            const items = await getItems()
+            var itemsCount = items.length
+            let itemsCountString = `Kamu menyimpan ${itemsCount} item pada aplikasi ini`
+            document.getElementById("items-count").innerHTML = itemsCountString
+            let htmlString = ``
+            items.forEach((item) => {
+                var addItemURL = "{% url 'main:add_item' id=1 %}".replace(/1/, item.pk.toString());
+                var reduceItemURL = "{% url 'main:reduce_item' id=1 %}".replace(/1/, item.pk.toString());
+                var editItemURL = "{% url 'main:edit_item' id=1 %}".replace(/1/, item.pk.toString());
+                var deleteItemURL = "{% url 'main:delete_item' id=1 %}".replace(/1/, item.pk.toString());
+                htmlString += `
+                <div class="card text-start border-dark mb-3" style="max-width: 18rem;display: inline-block;margin: 1%;width: 300px;">
+                    <div class="card-body" style="height: 200px;">
+                        <h5 class="card-title">${item.fields.name}</h5>
+                        <div class="overflow-y-auto" style="max-height: 120px;">${item.fields.description}</div>                   
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div><span class="badge text-bg-secondary">${item.fields.amount}</span></div>
+                            <div class="d-flex">
+                                <form method="POST" action="${addItemURL}">
+                                    {% csrf_token %}
+                                <button type="submit" name="action" value="add" class="btn btn-outline-success btn-sm" style="margin-right: 7px; width: 2rem;">+</button>
+                                </form>
+                                <form method="POST" action="${reduceItemURL}">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="reduce" class="btn btn-outline-warning btn-sm" style="margin-right: 7px; width: 2rem;">-</button>
+                                </form>
+                                <a href="${editItemURL}">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" style="margin-right: 7px; width: 2rem;"><i class="bi bi-pencil"></i></button>
+                                </a>
+                                <form method="POST" action="${deleteItemURL}">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="delete" class="btn btn-outline-danger btn-sm" style="margin-right: 7px; width: 2rem;"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `
+                
+                
+            })
+            
+            document.getElementById("item-content").innerHTML = htmlString
+        }
+
+        refreshItems()
+
+        function addItem() {
+            fetch("{% url 'main:add_item_ajax' %}", {
+                method: "POST",
+                body: new FormData(document.querySelector('#form'))
+            }).then(refreshItems)
+
+            document.getElementById("form").reset()
+            return false
+        }
+        document.getElementById("button_add").onclick = addItem
+    </script>
 
 {% endblock content %}
