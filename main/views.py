@@ -91,29 +91,6 @@ def logout_user(request):
     response.delete_cookie('last_login')
     return response
 
-def add_item(request, id):
-    if request.method == "POST":
-        item = Item.objects.get(pk=id)
-        item.amount += 1;
-        item.save()
-    return HttpResponseRedirect(reverse('main:show_main'))
-
-def reduce_item(request, id):
-    if request.method == "POST":
-        item = Item.objects.get(pk=id)
-        if item.amount > 1:
-            item.amount -= 1;
-            item.save()
-        else:
-            item.delete()
-    return HttpResponseRedirect(reverse('main:show_main'))
-
-def delete_item(request, id):
-    if request.method == "POST":
-        item = Item.objects.get(pk=id)
-        item.delete()
-    return HttpResponseRedirect(reverse('main:show_main'))
-
 def edit_item(request, id):
     # Get product berdasarkan ID
     item = Item.objects.get(pk = id)
@@ -146,4 +123,39 @@ def add_item_ajax(request):
 
         return HttpResponse(b"CREATED", status=201)
 
+    return HttpResponseNotFound()
+
+@csrf_exempt
+def add_item(request, id):
+    if request.method == "POST":
+        item = Item.objects.get(pk=id)
+        item.amount += 1;
+        item.save()
+
+        return HttpResponse(b"ADDED", status=201)
+    
+    return HttpResponseNotFound()
+
+@csrf_exempt
+def reduce_item(request, id):
+    if request.method == "POST":
+        item = Item.objects.get(pk=id)
+        if item.amount > 1:
+            item.amount -= 1;
+            item.save()
+        else:
+            item.delete()
+        
+        return HttpResponse(b"REDUCED", status=201)
+    
+    return HttpResponseNotFound()
+
+@csrf_exempt
+def delete_item(request, id):
+    if request.method == "POST":
+        item = Item.objects.get(pk=id)
+        item.delete()
+
+        return HttpResponse(b"DELETED", status=201)
+    
     return HttpResponseNotFound()

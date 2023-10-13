@@ -57,10 +57,8 @@
             <p id="items-count">Kamu menyimpan {{ items|length }} item pada aplikasi ini</p>
         </div>
         
-        <a href="{% url 'main:create_item' %}" class="link-add-item">
-            <button class="btn link-success btn-success btn-add-item" style="background-color: #B2DFDB;">
-                Add New Item
-            </button>
+        <a href="{% url 'main:create_item' %}" class="btn link-success btn-success btn-add-item" style="background-color: #B2DFDB;">
+            Add New Item
         </a>
         
         <button type="button" class="btn btn-primary btn-add-item" data-bs-toggle="modal" data-bs-target="#exampleModal">Add Product by AJAX</button>
@@ -114,18 +112,45 @@
             return fetch("{% url 'main:get_item_json' %}").then((res) => res.json())
         }
 
+        function incrementItem(itemId) {
+            fetch("{% url 'main:add_item' id=1 %}".replace(/1/, itemId), {
+                method: "POST",
+            }).then(refreshItems)
+
+            return false
+        }
+
+        function reduceItem(itemId) {
+            fetch("{% url 'main:reduce_item' id=1 %}".replace(/1/, itemId), {
+                method: "POST",
+            }).then(refreshItems)
+
+            return false
+        }
+
+        function deleteItem(itemId) {
+            fetch("{% url 'main:delete_item' id=1 %}".replace(/1/, itemId), {
+                method: "POST",
+            }).then(refreshItems)
+
+            return false
+        }
+
         async function refreshItems() {
             document.getElementById("item-content").innerHTML = ""
             const items = await getItems()
             var itemsCount = items.length
-            let itemsCountString = `Kamu menyimpan ${itemsCount} item pada aplikasi ini`
+            let itemsCountString = ``
+            if (itemsCount == 0) {
+                itemsCountString = `Kamu belum menyimpan item apa pun pada aplikasi ini`
+            } else {
+                itemsCountString = `Kamu menyimpan ${itemsCount} item pada aplikasi ini`
+            }
             document.getElementById("items-count").innerHTML = itemsCountString
             let htmlString = ``
             items.forEach((item) => {
-                var addItemURL = "{% url 'main:add_item' id=1 %}".replace(/1/, item.pk.toString());
-                var reduceItemURL = "{% url 'main:reduce_item' id=1 %}".replace(/1/, item.pk.toString());
                 var editItemURL = "{% url 'main:edit_item' id=1 %}".replace(/1/, item.pk.toString());
-                var deleteItemURL = "{% url 'main:delete_item' id=1 %}".replace(/1/, item.pk.toString());
+                var itemId = item.pk
                 htmlString += `
                 <div class="card text-start border-dark mb-3" style="max-width: 18rem;display: inline-block;margin: 1%;width: 300px;">
                     <div class="card-body" style="height: 200px;">
@@ -136,21 +161,12 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div><span class="badge text-bg-secondary">${item.fields.amount}</span></div>
                             <div class="d-flex">
-                                <form method="POST" action="${addItemURL}">
-                                    {% csrf_token %}
-                                <button type="submit" name="action" value="add" class="btn btn-outline-success btn-sm" style="margin-right: 7px; width: 2rem;">+</button>
-                                </form>
-                                <form method="POST" action="${reduceItemURL}">
-                                    {% csrf_token %}
-                                    <button type="submit" name="action" value="reduce" class="btn btn-outline-warning btn-sm" style="margin-right: 7px; width: 2rem;">-</button>
-                                </form>
+                                <button data-item-id="${itemId}" type="button" class="btn btn-outline-success btn-sm increment-button" style="margin-right: 7px; width: 2rem;">+</button>                             
+                                <button data-item-id="${itemId}" type="button" class="btn btn-outline-warning btn-sm reduce-button" style="margin-right: 7px; width: 2rem;">-</button>                         
                                 <a href="${editItemURL}">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" style="margin-right: 7px; width: 2rem;"><i class="bi bi-pencil"></i></button>
+                                    <button data-item-id="${itemId}" type="button" class="btn btn-outline-primary btn-sm" style="margin-right: 7px; width: 2rem;"><i class="bi bi-pencil"></i></button>
                                 </a>
-                                <form method="POST" action="${deleteItemURL}">
-                                    {% csrf_token %}
-                                    <button type="submit" name="action" value="delete" class="btn btn-outline-danger btn-sm" style="margin-right: 7px; width: 2rem;"><i class="bi bi-trash"></i></button>
-                                </form>
+                                <button data-item-id="${itemId}" type="button" class="btn btn-outline-danger btn-sm delete-button" style="margin-right: 7px; width: 2rem;"><i class="bi bi-trash"></i></button>
                             </div>
                         </div>
                     </div>
@@ -159,8 +175,34 @@
                 
                 
             })
-            
             document.getElementById("item-content").innerHTML = htmlString
+
+            const incrementButtons = document.getElementsByClassName("increment-button")
+            for (var i = 0; i < incrementButtons.length; i++) {
+                (function(j) {
+                    incrementButtons[j].addEventListener("click", function() {
+                        incrementItem(this.getAttribute("data-item-id"));
+                    })
+                })(i);
+            }
+
+            const reduceButtons = document.getElementsByClassName("reduce-button")
+            for (var i = 0; i < reduceButtons.length; i++) {
+                (function(j) {
+                    reduceButtons[j].addEventListener("click", function() {
+                        reduceItem(this.getAttribute("data-item-id"));
+                    })
+                })(i);
+            }
+
+            const deleteButtons = document.getElementsByClassName("delete-button")
+            for (var i = 0; i < deleteButtons.length; i++) {
+                (function(j) {
+                    deleteButtons[j].addEventListener("click", function() {
+                        deleteItem(this.getAttribute("data-item-id"));
+                    })
+                })(i);
+            }
         }
 
         refreshItems()
