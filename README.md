@@ -5,7 +5,7 @@
 **NPM     : 2206081553**<br>
 **Kelas   : PBP A**<br>
 
-Tautan untuk menuju aplikasi Inventory Manager -> [Inventory Manager](https://inventory-manager.adaptable.app/main/)
+Tautan untuk menuju aplikasi Inventory Manager -> [Inventory Manager](http://muhammad-nabiel21-tugas.pbp.cs.ui.ac.id/)
 
 # Tugas 2: Implementasi Model-View-Template (MVT) pada Django
 ## Membuat Proyek Django Baru
