@@ -1314,3 +1314,202 @@ Perbedaan antara *framework* CSS Tailwind dan Bootstrap diantaranya adalah cara 
 
 Penggunaan Bootstrap akan lebih baik daripada Tailwind ketika kita ingin membuat aplikasi walam waktu yang cepat dengan memiliki komponen desain yang sudah dirancang tanpa perlu membuatnya secara manual, sedangkan penggunaan Tailwind lebih baik daripada Bootstrap ketika kita ingin mendesain setiap komponen yang ada pada aplikasi dengan desain yang tinggi dan unik.
 
+## Tugas 6:JavaScript dan Asynchronous JavaScript
+### Mengubah kode *cards* agar mendukung AJAX GET
+1. Pada `views.py`, buatlah function baru dengan nama `get_item_json` yang menerima parameter request
+   ```python
+   def get_item_json(request):
+    product_item = Item.objects.filter(user=request.user)
+    return HttpResponse(serializers.serialize('json', product_item))
+   ```
+2. Tambahkan *routing* kedua function di atas ke file `urls.py`
+   ```python
+   from main.views import get_item_json
+   ```
+   ```python
+   urlpatterns = [
+     ...
+     path('get-item/', get_item_json, name='get_item_json'),
+   ]
+   ```
+3. Pada berkas `main.html`, ubah kode bagian table menjadi sebagai berikut
+   ```html
+   <div class="container" id="item-content"></div>
+   ```
+4. Buat block `<Script>` pada bagian bawah file tersebut dan isi dengan function berikut
+   ```javascripst
+   async function getItems() {
+            return fetch("{% url 'main:get_item_json' %}").then((res) => res.json())
+        }
+   ```
+5. Tambahkan function `refreshItems()` pada block tersebut yang digunakan untuk meng-update data produk secara *asynchronous*
+   ```javascript
+   async function refreshItems() {
+        document.getElementById("item-content").innerHTML = ""
+        const items = await getItems()
+        var itemsCount = items.length
+        let itemsCountString = ``
+        if (itemsCount == 0) {
+            itemsCountString = `Kamu belum menyimpan item apa pun pada aplikasi ini`
+        } else {
+            itemsCountString = `Kamu menyimpan ${itemsCount} item pada aplikasi ini`
+        }
+        document.getElementById("items-count").innerHTML = itemsCountString
+        let htmlString = ``
+        items.forEach((item) => {
+            var itemId = item.pk
+            htmlString += `
+            <div class="card text-start border-dark mb-3" style="max-width: 18rem;display: inline-block;margin: 1%;width: 300px;">
+                <div class="card-body" style="height: 200px;">
+                    <h5 class="card-title">${item.fields.name}</h5>
+                    <div class="overflow-y-auto" style="max-height: 120px;">${item.fields.description}</div>                   
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div><span class="badge text-bg-secondary">${item.fields.amount}</span></div>
+                        <div class="d-flex">
+                            <button data-item-id="${itemId}" type="button" class="btn btn-outline-success btn-sm increment-button" style="margin-right: 7px; width: 2rem;">+</button>                             
+                            <button data-item-id="${itemId}" type="button" class="btn btn-outline-warning btn-sm reduce-button" style="margin-right: 7px; width: 2rem;">-</button>                         
+                            <a href="${editItemURL}">
+                                <button data-item-id="${itemId}" type="button" class="btn btn-outline-primary btn-sm" style="margin-right: 7px; width: 2rem;"><i class="bi bi-pencil"></i></button>
+                            </a>
+                            <button data-item-id="${itemId}" type="button" class="btn btn-outline-danger btn-sm delete-button" style="margin-right: 7px; width: 2rem;"><i class="bi bi-trash"></i>                                      </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `
+            
+            
+        })
+        document.getElementById("item-content").innerHTML = htmlString
+
+        const incrementButtons = document.getElementsByClassName("increment-button")
+        for (var i = 0; i < incrementButtons.length; i++) {
+            (function(j) {
+                incrementButtons[j].addEventListener("click", function() {
+                    incrementItem(this.getAttribute("data-item-id"));
+                })
+            })(i);
+        }
+
+        const reduceButtons = document.getElementsByClassName("reduce-button")
+        for (var i = 0; i < reduceButtons.length; i++) {
+            (function(j) {
+                reduceButtons[j].addEventListener("click", function() {
+                    reduceItem(this.getAttribute("data-item-id"));
+                })
+            })(i);
+        }
+
+        const deleteButtons = document.getElementsByClassName("delete-button")
+        for (var i = 0; i < deleteButtons.length; i++) {
+            (function(j) {
+                deleteButtons[j].addEventListener("click", function() {
+                    deleteItem(this.getAttribute("data-item-id"));
+                })
+            })(i);
+        }
+    }
+
+    refreshItems()
+   ```
+
+### Membuat tombol yang mendukung *add item* menggunakan AJAX
+1. Buat modal sebagai form untuk menambahkan item baru
+   ```html
+   <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Add New Product</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="form" onsubmit="return false;">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="col-form-label">Name:</label>
+                            <input type="text" class="form-control" id="name" name="name"></input>
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="col-form-label">Amount:</label>
+                            <input type="number" class="form-control" id="amount" name="amount"></input>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="col-form-label">Description:</label>
+                            <textarea class="form-control" id="description" name="description"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="button_add" data-bs-dismiss="modal">Add Product</button>
+                </div>
+            </div>
+        </div>
+    </div>
+   ```
+2. Tambahkan button untuk menampilkan modal tersebut
+   ```html
+   <button type="button" class="btn btn-primary btn-add-item" data-bs-toggle="modal" data-bs-target="#exampleModal">Add Product by AJAX</button>
+   ```
+3. Buat function pada block `<Script>` dengan nama `addItem()` dan tambahkan fungsi `onclick` pada button yang sudah dibuat sebelumnya
+   ```javascript
+   function addItem() {
+            fetch("{% url 'main:add_item_ajax' %}", {
+                method: "POST",
+                body: new FormData(document.querySelector('#form'))
+            }).then(refreshItems)
+
+            document.getElementById("form").reset()
+            return false
+        }
+        document.getElementById("button_add").onclick = addItem
+   ```
+4. Buat lagi function baru dengan nama `add_item_ajax` pada file `views.py` yang menerima parameter request
+   ```python
+   def add_item_ajax(request):
+    if request.method == 'POST':
+        name = request.POST.get("name")
+        amount = request.POST.get("amount")
+        description = request.POST.get("description")
+        user = request.user
+
+        new_item = Item(name=name, amount=amount, description=description, user=user)
+        new_item.save()
+
+        return HttpResponse(b"CREATED", status=201)
+
+    return HttpResponseNotFound()
+   ```
+5. Tambahkan path url-nya ke file `urls.py`
+   ```python
+   from main.views import add_item_ajax
+   ```
+   ```python
+    urlpatterns = [
+      ...
+      path('create-ajax/', add_item_ajax, name='add_item_ajax')
+   ]
+   ```
+
+### Melakukan perintah `collectstatic`
+1. pada *command prompt*, pergi ke direktori tugas lalu aktifkan *virtual environment* dengan perintah `env\Scripts\activate.bat`
+2. Lalu, jalankan perintah `python manage.py collectstatic` untuk mengumpulkan semua file static (img, css, js) ke dalam suatu folder
+
+### Jelaskan perbedaan antara asynchronous programming dengan synchronous programming.
+*Synchronous programming* adalah suatu pendekatan dimana program akan mengeksekusi setiap operasi secara berurutan atau tugas berikutnya hanya akan mulai dikerjakan jika tugas sebelumnya telah selesai dikerjakan, sedangkan *asynchronous programming* adalah pendekatan dimana setiap operasi dapat dieksekusi tanpa harus menunggu operasi sebelumnya selesai dilakukan.
+
+### Dalam penerapan JavaScript dan AJAX, terdapat penerapan paradigma event-driven programming. Jelaskan maksud dari paradigma tersebut dan sebutkan salah satu contoh penerapannya pada tugas ini.
+Paradigma *event-driven programming* adalah suatu pendekatan dalam dunia pemrograman dimana alirna eksekusi program bergantung terhadap kejadian (event) yang terjadi, kejadian tersebut bisa berasal dari input pengguna, permintaan HTTP yang tiba, dan lain-lain. Salah satu contoh di dalam tugas ini adalah pada bagian button di setiap card karena setiap button tersebut (kecuali button edit) diberikan suatu *EventListener* yang membuat ketika button tersebut diklik, maka button tersebut akan melakukan suatu hal, dalam kasus ini, button increment akan menambahkan *amount* item sebanyak 1, button reduce akan mengurangi *amount* item sebanyak 1, dan button delete akan menghapus item tersebut.
+
+### Jelaskan penerapan asynchronous programming pada AJAX.
+Penerapan *asynchronous programming* pada AJAX memungkinkan permintaan yang dikirim ke server untuk berjalan secara *asynchronous*, artinya tidak perlu menunggu respons dari server sebelum melanjutkan eksekusi kode berikutnya. Pada umumnya, asynchronous AJAX menggunakan objek XMLHttpRequest untuk mengirim permintaan ke server dan menerima respons yang nantinya akan diproses oleh Javascript. Selain itu, penggunaan Fetch API juga digunakan untuk mengimplementasikan AJAX secara lebih mudah dibandingkan dengan XMLHttpRequest
+
+### Pada PBP kali ini, penerapan AJAX dilakukan dengan menggunakan Fetch API daripada library jQuery. Bandingkanlah kedua teknologi tersebut dan tuliskan pendapat kamu teknologi manakah yang lebih baik untuk digunakan.
+Menurut saya, yang lebih baik untuk digunakan adalah Fetch API karena beberapa alasan berikut.
+1. Fetch API sudah menjadi standar JavaScript modern dan terintegrasi dengan banyak browser sehingga tidak perlu mengimpor pustaka eksternal terlebih dahulu seperti jQuery. Hal tersebut juga membuat ukuran file aplikasi menjadi lebih kecil.
+2. Memiliki fleksibilitas yang tinggi untuk mengatur permintaan HTTP sesuai dengan kebutuhan, seperti penggunaan `.then()` untuk menggabungkan beberapa permintaan *asynchronous* atau penggunaan `.catch()` untuk *error-handling*.
+3. Promise-Based, artinya Fetch API menggunakan objek Promise yang membuat pengelolaan kode secara asynchronous menjadi lebih simpel dan memiliki sintaks yang mudah dimengerti
+
